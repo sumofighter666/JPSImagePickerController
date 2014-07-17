@@ -89,6 +89,23 @@
     self.volumeButtonHandler = nil;
 }
 
+#pragma mark - Accessors
+
+- (void)setConfirmationString:(NSString *)confirmationString {
+    _confirmationString = confirmationString;
+    self.confirmationLabel.text = self.confirmationString;
+}
+
+- (void)setConfirmationOverlayString:(NSString *)confirmationOverlayString {
+    _confirmationOverlayString = confirmationOverlayString;
+    self.confirmationOverlayLabel.text = self.confirmationOverlayString;
+}
+
+- (void)setConfirmationOverlayBackgroundColor:(UIColor *)confirmationOverlayBackgroundColor {
+    _confirmationOverlayBackgroundColor = confirmationOverlayBackgroundColor;
+    self.confirmationOverlayLabel.backgroundColor = confirmationOverlayBackgroundColor;
+}
+
 #pragma mark - Setup UI
 
 - (void)addVolumeButtonHandler {
@@ -588,21 +605,6 @@
                                                           multiplier:1.0f
                                                             constant:0];
     [self.view addConstraints:@[centerX, width, top]];
-}
-
-- (void)setConfirmationString:(NSString *)confirmationString {
-    _confirmationString = confirmationString;
-    self.confirmationLabel.text = self.confirmationString;
-}
-
-- (void)setConfirmationOverlayString:(NSString *)confirmationOverlayString {
-    _confirmationOverlayString = confirmationOverlayString;
-    self.confirmationOverlayLabel.text = self.confirmationOverlayString;
-}
-
-- (void)setConfirmationOverlayBackgroundColor:(UIColor *)confirmationOverlayBackgroundColor {
-    _confirmationOverlayBackgroundColor = confirmationOverlayBackgroundColor;
-    self.confirmationOverlayLabel.backgroundColor = confirmationOverlayBackgroundColor;
 }
 
 #pragma mark - Preview Actions
