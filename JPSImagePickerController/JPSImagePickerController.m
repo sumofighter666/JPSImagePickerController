@@ -329,14 +329,12 @@
                                             } else {
                                                 [self dismiss];
                                             }
-                                            if ([self.delegate respondsToSelector:@selector(picker:didTakePicture:)]) {
-                                                [self.delegate picker:self didTakePicture:image];
-                                            }
+                                            [self delegateCalloutDidCaptureImage:image];
                                         }];
 }
 
 - (void)dismiss {
-    [self dismissViewControllerAnimated:YES completion:nil];
+    [self delegateCalloutDidCancel];
 }
 
 - (void)didPressFlashButton {
@@ -633,10 +631,7 @@
 }
 
 - (void)use {
-    if ([self.delegate respondsToSelector:@selector(picker:didConfirmPicture:)]) {
-        [self.delegate picker:self didConfirmPicture:self.previewImage];
-    }
-    [self dismiss];
+    [self delegateCalloutDidConfirmImage:self.previewImage];
 }
 
 #pragma mark - Orientation
@@ -669,6 +664,29 @@
     }
     
     return imageOrientation;
+}
+
+#pragma mark - Delegate Indirection
+
+- (void)delegateCalloutDidCaptureImage:(UIImage *)image
+{
+    if ([self.delegate respondsToSelector:@selector(picker:didCaptureImage:)]) {
+        [self.delegate picker:self didCaptureImage:image];
+    }
+}
+
+- (void)delegateCalloutDidConfirmImage:(UIImage *)image
+{
+    if ([self.delegate respondsToSelector:@selector(picker:didConfirmImage:)]) {
+        [self.delegate picker:self didConfirmImage:image];
+    }
+}
+
+- (void)delegateCalloutDidCancel
+{
+    if ([self.delegate respondsToSelector:@selector(pickerDidCancel:)]) {
+        [self.delegate pickerDidCancel:self];
+    }
 }
 
 @end
