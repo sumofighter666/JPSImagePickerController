@@ -83,6 +83,7 @@
 
 #pragma mark - JPSImagePickerControllerDelegate
 
+#if 0 //This gives the controller ridiculous behavior.
 - (void)picker:(JPSImagePickerController *)picker didTakePicture:(UIImage *)picture {
     picker.confirmationString = @"Zoom in to make sure you're happy with your picture";
     picker.confirmationOverlayString = @"Analyzing Image...";
@@ -94,6 +95,7 @@
         picker.confirmationOverlayBackgroundColor = [UIColor colorWithRed:0 green:0.8f blue:0 alpha:1.0f];
     });
 }
+#endif
 
 - (void)picker:(JPSImagePickerController *)picker didConfirmPicture:(UIImage *)picture {
     self.imageView.image = picture;
