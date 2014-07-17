@@ -89,6 +89,8 @@
     self.volumeButtonHandler = nil;
 }
 
+#pragma mark - Setup UI
+
 - (void)addVolumeButtonHandler {
     if (self.volumeButtonTakesPicture) {
         self.volumeButtonHandler = [JPSVolumeButtonHandler volumeButtonHandlerWithUpBlock:^{
@@ -96,8 +98,6 @@
         } downBlock:nil];
     }
 }
-
-#pragma mark - UI
 
 - (void)addCameraButton {
     self.cameraButton = [JPSCameraButton button];
@@ -211,6 +211,8 @@
                                                             constant:7.5f];
     [self.view addConstraints:@[right, top]];
 }
+
+#pragma mark - UIViewController Overrides
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
