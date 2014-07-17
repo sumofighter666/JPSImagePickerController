@@ -53,8 +53,9 @@
     return self;
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
+- (void)loadView
+{
+    self.view = [[UIView alloc] init];
     self.view.tintColor = [UIColor whiteColor];
     self.view.backgroundColor = [UIColor blackColor];
     self.captureQueue = [[NSOperationQueue alloc] init];
