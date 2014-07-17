@@ -592,23 +592,17 @@
 
 - (void)setConfirmationString:(NSString *)confirmationString {
     _confirmationString = confirmationString;
-    if (self.confirmationLabel) {
-        self.confirmationLabel.text = self.confirmationString;
-    }
+    self.confirmationLabel.text = self.confirmationString;
 }
 
 - (void)setConfirmationOverlayString:(NSString *)confirmationOverlayString {
     _confirmationOverlayString = confirmationOverlayString;
-    if (self.confirmationOverlayLabel) {
-        self.confirmationOverlayLabel.text = self.confirmationOverlayString;
-    }
+    self.confirmationOverlayLabel.text = self.confirmationOverlayString;
 }
 
 - (void)setConfirmationOverlayBackgroundColor:(UIColor *)confirmationOverlayBackgroundColor {
     _confirmationOverlayBackgroundColor = confirmationOverlayBackgroundColor;
-    if (self.confirmationOverlayLabel) {
-        self.confirmationOverlayLabel.backgroundColor = confirmationOverlayBackgroundColor;
-    }
+    self.confirmationOverlayLabel.backgroundColor = confirmationOverlayBackgroundColor;
 }
 
 #pragma mark - Preview Actions
