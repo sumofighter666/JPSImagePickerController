@@ -113,8 +113,7 @@
     [self presentViewController:imagePicker animated:YES completion:nil];
 }
 
-- (void)launchSystemImagePicker
-{
+- (void)launchSystemImagePicker {
     UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
     imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     imagePicker.delegate = self;
