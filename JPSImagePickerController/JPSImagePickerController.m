@@ -638,7 +638,7 @@
 #pragma mark - Orientation
 
 - (NSUInteger)supportedInterfaceOrientations {
-    return UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAll;
 }
 
 + (UIImageOrientation)currentImageOrientation {
