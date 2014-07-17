@@ -11,32 +11,31 @@
 #import <AVFoundation/AVFoundation.h>
 #import "JPSVolumeButtonHandler.h"
 
-@interface JPSImagePickerController () <UIScrollViewDelegate>
+@interface JPSImagePickerController (/*Lifetime State: Views*/) <UIScrollViewDelegate>
+@property (nonatomic) UILabel *confirmationLabel;
+@property (nonatomic) UILabel *confirmationOverlayLabel;
 
-// Camera
-@property (nonatomic, strong) AVCaptureSession           * session;
-@property (nonatomic, strong) UIView                     * capturePreviewView;
-@property (nonatomic, strong) AVCaptureVideoPreviewLayer * capturePreviewLayer;
-@property (nonatomic, strong) NSOperationQueue           * captureQueue;
-@property (nonatomic, assign) UIImageOrientation           imageOrientation;
+@property (nonatomic) UIView *capturePreviewView;
+@property (nonatomic) UIImageView * previewImageView;
+@property (nonatomic) AVCaptureVideoPreviewLayer *capturePreviewLayer;
 
-// Camera Controls
-@property (nonatomic, strong) UIButton *cameraButton;
-@property (nonatomic, strong) UIButton *cancelButton;
-@property (nonatomic, strong) UIButton *flashButton;
-@property (nonatomic, strong) UIButton *cameraSwitchButton;
-@property (nonatomic, strong) JPSVolumeButtonHandler *volumeButtonHandler;
+@property (nonatomic) UIButton *cameraButton;
+@property (nonatomic) UIButton *cancelButton;
+@property (nonatomic) UIButton *flashButton;
+@property (nonatomic) UIButton *cameraSwitchButton;
+@property (nonatomic) UIButton* retakeButton;
+@property (nonatomic) UIButton* useButton;
+@end
 
-// Preview
-@property (nonatomic, strong) UIImage     * previewImage;
-@property (nonatomic, strong) UIImageView * previewImageView;
-@property (nonatomic, strong) UIButton    * retakeButton;
-@property (nonatomic, strong) UIButton    * useButton;
+@interface JPSImagePickerController (/*Lifetime State*/)
+@property (nonatomic) AVCaptureSession *session;
+@property (nonatomic) NSOperationQueue *captureQueue;
+@property (nonatomic) JPSVolumeButtonHandler *volumeButtonHandler;
+@end
 
-// Preview Top Area
-@property (nonatomic, strong) UILabel * confirmationLabel;
-@property (nonatomic, strong) UILabel * confirmationOverlayLabel;
-
+@interface JPSImagePickerController (/*State*/)
+@property (nonatomic) UIImage *previewImage;
+@property (nonatomic) UIImageOrientation imageOrientation;
 @end
 
 @implementation JPSImagePickerController
