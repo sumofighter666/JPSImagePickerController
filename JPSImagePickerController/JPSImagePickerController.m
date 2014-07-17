@@ -41,6 +41,8 @@
 
 @implementation JPSImagePickerController
 
+#pragma mark - Lifecycle
+
 - (id)init {
     self = [super init];
     if (self) {
