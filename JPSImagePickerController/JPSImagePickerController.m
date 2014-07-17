@@ -482,7 +482,7 @@
     self.useButton = [UIButton buttonWithType:UIButtonTypeSystem];
     self.useButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
     self.useButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.useButton setTitle:@"Use" forState:UIControlStateNormal];
+    [self.useButton setTitle:@"Use Photo" forState:UIControlStateNormal];
     [self.useButton addTarget:self action:@selector(use) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.useButton];
     
