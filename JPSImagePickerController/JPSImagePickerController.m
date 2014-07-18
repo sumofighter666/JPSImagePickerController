@@ -36,7 +36,9 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 @property (nonatomic) UIButton *flashButton;
 @property (nonatomic) UIButton *cameraSwitchButton;
 @property (nonatomic) UIButton *retakeButton;
+@property (nonatomic) UIButton *retakeOverlayButton;
 @property (nonatomic) UIButton *useButton;
+@property (nonatomic) UIButton *useOverlayButton;
 @end
 
 @interface JPSImagePickerController (/*Lifetime State*/)
@@ -200,7 +202,9 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [self addFlashButton];
     [self addCameraSwitchButton];
     [self addUseButton];
+    [self addUseOverlayButton];
     [self addRetakeButton];
+    [self addRetakeOverlayButton];
     
     [self updateSubviewsHiddenFromState];
 }
@@ -481,7 +485,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     titleLabel.font = [UIFont systemFontOfSize:18.0f];
     titleLabel.textColor = [UIColor whiteColor];
     [retakeButton setTitle:@"Retake" forState:UIControlStateNormal];
-    [retakeButton addTarget:self action:@selector(retake:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:retakeButton];
     self.retakeButton = retakeButton;
@@ -505,6 +508,52 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [view addConstraints:@[left, vertical]];
 }
 
+- (void)addRetakeOverlayButton
+{
+    UIView *view = self.view;
+    UIView *editingToolbarView = self.editingToolbarView;
+    UIButton *retakeButton = self.retakeButton;
+    
+    // View
+    UIButton *retakeOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [retakeOverlayButton addTarget:self action:@selector(retake:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:retakeOverlayButton];
+    self.retakeOverlayButton = retakeOverlayButton;
+    
+    // Constraints
+    retakeOverlayButton.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:retakeOverlayButton
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:editingToolbarView
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:0.0];
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:retakeOverlayButton
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:editingToolbarView
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0
+                                                             constant:0.0];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:retakeOverlayButton
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:editingToolbarView
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0
+                                                               constant:0.0];
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:retakeOverlayButton
+                                                             attribute:NSLayoutAttributeTrailing
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:retakeButton
+                                                             attribute:NSLayoutAttributeTrailing
+                                                            multiplier:1.0
+                                                              constant:0.0];
+    [view addConstraints:@[top, right, bottom, left]];
+}
+
 - (void)addUseButton
 {
     UIView *view = self.view;
@@ -516,7 +565,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     titleLabel.font = [UIFont systemFontOfSize:18.0f];
     titleLabel.textColor = [UIColor whiteColor];
     [useButton setTitle:@"Use Photo" forState:UIControlStateNormal];
-    [useButton addTarget:self action:@selector(use:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:useButton];
     self.useButton = useButton;
@@ -528,7 +576,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                              relatedBy:NSLayoutRelationEqual
                                                                 toItem:editingToolbarView
                                                              attribute:NSLayoutAttributeRight
-                                                            multiplier:1.0f
+                                                            multiplier:1.0
                                                               constant:-JPSImagePickerControllerButtonInset];
     NSLayoutConstraint *vertical = [NSLayoutConstraint constraintWithItem:useButton
                                                                 attribute:NSLayoutAttributeCenterY
@@ -538,6 +586,52 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                multiplier:1.0
                                                                  constant:0.0];
     [view addConstraints:@[right, vertical]];
+}
+
+- (void)addUseOverlayButton
+{
+    UIView *view = self.view;
+    UIView *editingToolbarView = self.editingToolbarView;
+    UIButton *useButton = self.useButton;
+    
+    // View
+    UIButton *useOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [useOverlayButton addTarget:self action:@selector(use:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:useOverlayButton];
+    self.useOverlayButton = useOverlayButton;
+    
+    // Constraints
+    useOverlayButton.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:useOverlayButton
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:editingToolbarView
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:0.0];
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:useOverlayButton
+                                                             attribute:NSLayoutAttributeRight
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:editingToolbarView
+                                                             attribute:NSLayoutAttributeRight
+                                                            multiplier:1.0
+                                                              constant:0.0];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:useOverlayButton
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:editingToolbarView
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0
+                                                               constant:0.0];
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:useOverlayButton
+                                                            attribute:NSLayoutAttributeLeading
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:useButton
+                                                            attribute:NSLayoutAttributeLeading
+                                                           multiplier:1.0
+                                                             constant:-JPSImagePickerControllerButtonInset];
+    [view addConstraints:@[top, right, bottom, left]];
 }
 
 #pragma mark - Update UI
@@ -552,7 +646,9 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [self updateCapturePreviewViewHidden];
     [self updatePreviewImageViewHidden];
     [self updateRetakeButtonHidden];
+    [self updateRetakeOverlayButtonHidden];
     [self updateUseButtonHidden];
+    [self updateUseOverlayButtonHidden];
     
     [self updateCameraButtonHidden];
     [self updateCancelButtonHidden];
@@ -626,6 +722,15 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.retakeButton.hidden = !visible;
 }
 
+- (void)updateRetakeOverlayButtonHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.retakeOverlayButton.hidden = !visible;
+}
+
 - (void)updateUseButtonHidden
 {
     BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
@@ -633,6 +738,15 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     BOOL visible = captured;
     
     self.useButton.hidden = !visible;
+}
+
+- (void)updateUseOverlayButtonHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.useOverlayButton.hidden = !visible;
 }
 
 - (void)updateCameraButtonHidden
