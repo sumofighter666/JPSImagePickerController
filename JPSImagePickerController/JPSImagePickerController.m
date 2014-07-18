@@ -185,6 +185,61 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     return result;
 }
 
+
+- (UIImageOrientation)imageOrientationForDeviceOrientation:(UIDeviceOrientation)deviceOrientation captureDevicePosition:(AVCaptureDevicePosition)position
+{
+    UIImageOrientation result = UIImageOrientationUp;
+    
+    switch (position) {
+        case AVCaptureDevicePositionBack: {
+            switch (deviceOrientation) {
+                case UIDeviceOrientationLandscapeLeft: {
+                    result = UIImageOrientationUp;
+                } break;
+                case UIDeviceOrientationLandscapeRight: {
+                    result = UIImageOrientationDown;
+                } break;
+                case UIDeviceOrientationPortraitUpsideDown: {
+                    result = UIImageOrientationLeft;
+                } break;
+                case UIDeviceOrientationPortrait: {
+                    result = UIImageOrientationRight;
+                } break;
+                default: {
+                    //TODO: Is this right for face-up, face-down?
+                    result = UIImageOrientationRight;
+                } break;
+            }
+        } break;
+        case AVCaptureDevicePositionFront: {
+            switch (deviceOrientation) {
+                case UIDeviceOrientationLandscapeLeft: {
+                    result = UIImageOrientationDown;
+                } break;
+                case UIDeviceOrientationLandscapeRight: {
+                    result = UIImageOrientationUp;
+                } break;
+                case UIDeviceOrientationPortraitUpsideDown: {
+                    result = UIImageOrientationLeft;
+                } break;
+                case UIDeviceOrientationPortrait: {
+                    result = UIImageOrientationRight;
+                } break;
+                default: {
+                    //TODO: Is this right for face-up, face-down?
+                    result = UIImageOrientationRight;
+                } break;
+            }
+        } break;
+        case AVCaptureDevicePositionUnspecified: {
+            //TODO: Does this make sense?
+            result = UIImageOrientationRight;
+        } break;
+    }
+    
+    return result;
+}
+
 #pragma mark - UIViewController Overrides
 
 - (void)updateViewConstraints
@@ -936,7 +991,12 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 {
     if (imageDataSampleBuffer) {
         NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-        UIImageOrientation imageOrientation = [JPSImagePickerController currentImageOrientation];
+        UIDeviceOrientation deviceOrientation = [[UIDevice currentDevice] orientation];
+        AVCaptureDeviceInput *input = self.session.inputs.firstObject;
+        AVCaptureDevicePosition currentCaptureDevicePosition =
+        input.device.position;
+        UIImageOrientation imageOrientation = [self imageOrientationForDeviceOrientation:deviceOrientation
+                                                                   captureDevicePosition:currentCaptureDevicePosition];
         self.imageOrientation = imageOrientation;
         UIImage *image = [UIImage imageWithCGImage:[[[UIImage alloc] initWithData:imageData] CGImage]
                                              scale:1.0f
@@ -1045,34 +1105,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (IBAction)didPressUseButton:(id)sender
 {
     [self delegateCalloutDidConfirmImage:self.previewImage];
-}
-
-#pragma mark - Orientation
-
-+ (UIImageOrientation)currentImageOrientation {
-    // This is weird, but it works
-    // By all means fix it, but make sure to test it afterwards
-    UIDeviceOrientation deviceOrientation = [[UIDevice currentDevice] orientation];
-    UIImageOrientation imageOrientation = UIImageOrientationRight;
-    
-    switch (deviceOrientation) {
-        case UIDeviceOrientationLandscapeLeft:
-            imageOrientation = UIImageOrientationUp;
-            break;
-            
-        case UIDeviceOrientationLandscapeRight:
-            imageOrientation = UIImageOrientationDown;
-            break;
-            
-        case UIDeviceOrientationPortraitUpsideDown:
-            imageOrientation = UIImageOrientationLeft;
-            break;
-            
-        default:
-            break;
-    }
-    
-    return imageOrientation;
 }
 
 #pragma mark - Delegate Indirection
