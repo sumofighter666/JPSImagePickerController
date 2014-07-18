@@ -1,5 +1,5 @@
 //
-//  UIImage+DrawBlock.h
+//  UIImage+JPSDrawBlock.h
 //  JPSImagePickerController
 //
 //  Created by JP Simard on 1/31/2014.
@@ -10,8 +10,8 @@
 
 typedef void (^DrawBlock)(CGContextRef context, CGSize size);
 
-@interface UIImage (DrawBlock)
+@interface UIImage (JPSDrawBlock)
 
-+ (UIImage *)imageWithSize:(CGSize)size drawBlock:(DrawBlock)drawBlock;
++ (UIImage *)jps_imageWithSize:(CGSize)size drawBlock:(DrawBlock)drawBlock;
 
 @end

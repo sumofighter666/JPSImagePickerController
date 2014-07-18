@@ -1,16 +1,16 @@
 //
-//  UIImage+DrawBlock.m
+//  UIImage+JPSDrawBlock.m
 //  JPSImagePickerController
 //
 //  Created by JP Simard on 1/31/2014.
 //  Copyright (c) 2014 JP Simard. All rights reserved.
 //
 
-#import "UIImage+DrawBlock.h"
+#import "UIImage+JPSDrawBlock.h"
 
-@implementation UIImage (DrawBlock)
+@implementation UIImage (JPSDrawBlock)
 
-+ (UIImage *)imageWithSize:(CGSize)size drawBlock:(DrawBlock)drawBlock {
++ (UIImage *)jps_imageWithSize:(CGSize)size drawBlock:(DrawBlock)drawBlock {
     UIGraphicsBeginImageContextWithOptions(size, NO, [[UIScreen mainScreen] scale]);
     CGContextRef context = UIGraphicsGetCurrentContext();
     

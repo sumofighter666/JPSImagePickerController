@@ -7,7 +7,7 @@
 //
 
 #import "JPSCameraButton.h"
-#import "UIImage+DrawBlock.h"
+#import "UIImage+JPSDrawBlock.h"
 
 @implementation JPSCameraButton
 
@@ -26,7 +26,7 @@
     static UIImage *_image = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _image = [UIImage imageWithSize:CGSizeMake(66.0f, 66.0f) drawBlock:^(CGContextRef context, CGSize size) {
+        _image = [UIImage jps_imageWithSize:CGSizeMake(66.0f, 66.0f) drawBlock:^(CGContextRef context, CGSize size) {
             UIBezierPath *outerRingPath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(3, 3, 60, 60)];
             [self.tintColor setStroke];
             outerRingPath.lineWidth = 6;
@@ -40,7 +40,7 @@
     static UIImage *_image = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _image = [UIImage imageWithSize:CGSizeMake(66.0f, 66.0f) drawBlock:^(CGContextRef context, CGSize size) {
+        _image = [UIImage jps_imageWithSize:CGSizeMake(66.0f, 66.0f) drawBlock:^(CGContextRef context, CGSize size) {
             UIBezierPath *innerCirclePath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(8, 8, 50, 50)];
             [self.tintColor setFill];
             [innerCirclePath fill];

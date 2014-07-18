@@ -29,8 +29,8 @@
 		E84268F2189C1DA40024831A /* JPSImagePickerController.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268E8189C1DA40024831A /* JPSImagePickerController.m */; };
 		E84268F3189C1DA40024831A /* JPSVolumeButtonHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EA189C1DA40024831A /* JPSVolumeButtonHandler.m */; };
 		E84268F4189C1DA40024831A /* JPSVolumeButtonHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EA189C1DA40024831A /* JPSVolumeButtonHandler.m */; };
-		E84268F5189C1DA40024831A /* UIImage+DrawBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EC189C1DA40024831A /* UIImage+DrawBlock.m */; };
-		E84268F6189C1DA40024831A /* UIImage+DrawBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EC189C1DA40024831A /* UIImage+DrawBlock.m */; };
+		E84268F5189C1DA40024831A /* UIImage+JPSDrawBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EC189C1DA40024831A /* UIImage+JPSDrawBlock.m */; };
+		E84268F6189C1DA40024831A /* UIImage+JPSDrawBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268EC189C1DA40024831A /* UIImage+JPSDrawBlock.m */; };
 		E84268F8189C1E5C0024831A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E84268F7189C1E5C0024831A /* AVFoundation.framework */; };
 		E84268FA189C1E620024831A /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E84268F9189C1E620024831A /* MediaPlayer.framework */; };
 		E84268FD189C1E8B0024831A /* JPSViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E84268FC189C1E8B0024831A /* JPSViewController.m */; };
@@ -75,8 +75,8 @@
 		E84268E8189C1DA40024831A /* JPSImagePickerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = JPSImagePickerController.m; path = JPSImagePickerController/JPSImagePickerController.m; sourceTree = SOURCE_ROOT; };
 		E84268E9189C1DA40024831A /* JPSVolumeButtonHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JPSVolumeButtonHandler.h; path = JPSImagePickerController/JPSVolumeButtonHandler.h; sourceTree = SOURCE_ROOT; };
 		E84268EA189C1DA40024831A /* JPSVolumeButtonHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = JPSVolumeButtonHandler.m; path = JPSImagePickerController/JPSVolumeButtonHandler.m; sourceTree = SOURCE_ROOT; };
-		E84268EB189C1DA40024831A /* UIImage+DrawBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIImage+DrawBlock.h"; path = "JPSImagePickerController/UIImage+DrawBlock.h"; sourceTree = SOURCE_ROOT; };
-		E84268EC189C1DA40024831A /* UIImage+DrawBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIImage+DrawBlock.m"; path = "JPSImagePickerController/UIImage+DrawBlock.m"; sourceTree = SOURCE_ROOT; };
+		E84268EB189C1DA40024831A /* UIImage+JPSDrawBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIImage+JPSDrawBlock.h"; path = "JPSImagePickerController/UIImage+JPSDrawBlock.h"; sourceTree = SOURCE_ROOT; };
+		E84268EC189C1DA40024831A /* UIImage+JPSDrawBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIImage+JPSDrawBlock.m"; path = "JPSImagePickerController/UIImage+JPSDrawBlock.m"; sourceTree = SOURCE_ROOT; };
 		E84268F7189C1E5C0024831A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		E84268F9189C1E620024831A /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		E84268FB189C1E8B0024831A /* JPSViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JPSViewController.h; sourceTree = "<group>"; };
@@ -194,8 +194,8 @@
 				E84268E8189C1DA40024831A /* JPSImagePickerController.m */,
 				E84268E9189C1DA40024831A /* JPSVolumeButtonHandler.h */,
 				E84268EA189C1DA40024831A /* JPSVolumeButtonHandler.m */,
-				E84268EB189C1DA40024831A /* UIImage+DrawBlock.h */,
-				E84268EC189C1DA40024831A /* UIImage+DrawBlock.m */,
+				E84268EB189C1DA40024831A /* UIImage+JPSDrawBlock.h */,
+				E84268EC189C1DA40024831A /* UIImage+JPSDrawBlock.m */,
 				43CF512319785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.h */,
 				43CF512419785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m */,
 				43CF51271978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.h */,
@@ -310,7 +310,7 @@
 				43CF51291978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m in Sources */,
 				E84268F1189C1DA40024831A /* JPSImagePickerController.m in Sources */,
 				E84268F3189C1DA40024831A /* JPSVolumeButtonHandler.m in Sources */,
-				E84268F5189C1DA40024831A /* UIImage+DrawBlock.m in Sources */,
+				E84268F5189C1DA40024831A /* UIImage+JPSDrawBlock.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,7 +322,7 @@
 				E84268EE189C1DA40024831A /* JPSCameraButton.m in Sources */,
 				E84268FE189C1E8B0024831A /* JPSViewController.m in Sources */,
 				E84268F4189C1DA40024831A /* JPSVolumeButtonHandler.m in Sources */,
-				E84268F6189C1DA40024831A /* UIImage+DrawBlock.m in Sources */,
+				E84268F6189C1DA40024831A /* UIImage+JPSDrawBlock.m in Sources */,
 				E81B929A189C1C41004C04FD /* JPSImagePickerControllerDemoTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
