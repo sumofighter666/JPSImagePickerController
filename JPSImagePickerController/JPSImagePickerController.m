@@ -358,7 +358,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
     cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
     [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [cancelButton addTarget:self action:@selector(cancelButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [cancelButton addTarget:self action:@selector(didPressCancelButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:cancelButton];
     self.cancelButton = cancelButton;
@@ -954,7 +954,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     }
 }
 
-- (IBAction)cancelButtonPressed:(id)sender
+- (IBAction)didPressCancelButton:(id)sender
 {
     [self delegateCalloutDidCancel];
 }
