@@ -62,7 +62,13 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (id)init {
     self = [super init];
     if (self) {
-        _captureQueue = [[NSOperationQueue alloc] init];
+        _captureQueue = ^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            
+            operationQueue.maxConcurrentOperationCount = 1;
+            
+            return operationQueue;
+        }();
         
         _editingEnabled = YES;
         _volumeButtonTakesPicture = YES;
