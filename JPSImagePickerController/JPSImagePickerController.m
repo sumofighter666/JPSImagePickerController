@@ -920,27 +920,32 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                         completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
                                             __strong typeof(self) strong_self = weak_self;
                                             if (strong_self) {
-                                                if (imageDataSampleBuffer) {
-                                                    NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-                                                    UIImageOrientation imageOrientation = [JPSImagePickerController currentImageOrientation];
-                                                    strong_self.imageOrientation = imageOrientation;
-                                                    UIImage *image = [UIImage imageWithCGImage:[[[UIImage alloc] initWithData:imageData] CGImage]
-                                                                                         scale:1.0f
-                                                                                   orientation:imageOrientation];
-                                                    strong_self.previewImage = image;
-                                                    strong_self.state = JPSImagePickerControllerStateCaptured;
-                                                    
-                                                    [strong_self delegateCalloutDidCaptureImage:image];
-                                                    if (strong_self.editingEnabled) {
-                                                        [strong_self updateSubviewsHiddenFromState];
-                                                    } else {
-                                                        [strong_self delegateCalloutDidConfirmImage:image];
-                                                    }
-                                                } else {
-                                                    strong_self.cameraButton.enabled = YES;
-                                                }
+                                                [self doCaptureStillImageCompletionWithImageDataSampleBuffer:imageDataSampleBuffer error:error];
                                             }
                                         }];
+}
+
+- (void)doCaptureStillImageCompletionWithImageDataSampleBuffer:(CMSampleBufferRef)imageDataSampleBuffer error:(NSError *)error
+{
+    if (imageDataSampleBuffer) {
+        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+        UIImageOrientation imageOrientation = [JPSImagePickerController currentImageOrientation];
+        self.imageOrientation = imageOrientation;
+        UIImage *image = [UIImage imageWithCGImage:[[[UIImage alloc] initWithData:imageData] CGImage]
+                                             scale:1.0f
+                                       orientation:imageOrientation];
+        self.previewImage = image;
+        self.state = JPSImagePickerControllerStateCaptured;
+        
+        [self delegateCalloutDidCaptureImage:image];
+        if (self.editingEnabled) {
+            [self updateSubviewsHiddenFromState];
+        } else {
+            [self delegateCalloutDidConfirmImage:image];
+        }
+    } else {
+        self.cameraButton.enabled = YES;
+    }
 }
 
 - (IBAction)cancelButtonPressed:(id)sender
