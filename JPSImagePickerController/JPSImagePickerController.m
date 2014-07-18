@@ -766,7 +766,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                 toItem:retakeButton
                                                              attribute:NSLayoutAttributeTrailing
                                                             multiplier:1.0
-                                                              constant:0.0];
+                                                              constant:JPSImagePickerControllerButtonInset];
     [editingToolbarView addConstraints:@[top, right, bottom, left]];
 }
 
