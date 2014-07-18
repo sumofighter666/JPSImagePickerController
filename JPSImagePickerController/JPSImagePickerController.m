@@ -596,7 +596,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     // View
     UIButton *useOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [useOverlayButton addTarget:self action:@selector(use:) forControlEvents:UIControlEventTouchUpInside];
+    [useOverlayButton addTarget:self action:@selector(didPressUseButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:useOverlayButton];
     self.useOverlayButton = useOverlayButton;
@@ -1022,7 +1022,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.cameraButton.enabled = YES;
 }
 
-- (IBAction)use:(id)sender
+- (IBAction)didPressUseButton:(id)sender
 {
     [self delegateCalloutDidConfirmImage:self.previewImage];
 }
