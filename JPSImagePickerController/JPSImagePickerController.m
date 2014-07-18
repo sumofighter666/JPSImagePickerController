@@ -454,7 +454,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                       forwardingTarget:cancelButton];
     [cancelOverlayControl addTarget:self action:@selector(didPressCancelButton:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view addSubview:cancelOverlayControl];
+    [capturingToolbarView addSubview:cancelOverlayControl];
     self.cancelOverlayControl = cancelOverlayControl;
     
     // Constraints
@@ -487,7 +487,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                            attribute:NSLayoutAttributeTop
                                                           multiplier:1.0
                                                             constant:-JPSImagePickerControllerButtonInset];
-    [view addConstraints:@[right, bottom, left, top]];
+    [capturingToolbarView addConstraints:@[right, bottom, left, top]];
 }
 
 - (void)addFlashButton
