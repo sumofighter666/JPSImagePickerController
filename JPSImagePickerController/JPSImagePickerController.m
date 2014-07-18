@@ -805,7 +805,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                   forwardingTarget:useButton];
     [useOverlayControl addTarget:self action:@selector(didPressUseButton:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view addSubview:useOverlayControl];
+    [editingToolbarView addSubview:useOverlayControl];
     self.useOverlayControl = useOverlayControl;
     
     // Constraints
@@ -838,7 +838,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                             attribute:NSLayoutAttributeLeading
                                                            multiplier:1.0
                                                              constant:-JPSImagePickerControllerButtonInset];
-    [view addConstraints:@[top, right, bottom, left]];
+    [editingToolbarView addConstraints:@[top, right, bottom, left]];
 }
 
 #pragma mark - Update UI
