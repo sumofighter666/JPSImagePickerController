@@ -70,6 +70,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
             return operationQueue;
         }();
         
+        _frontCameraEnabled = YES;
         _editingEnabled = YES;
         _volumeButtonTakesPicture = YES;
     }

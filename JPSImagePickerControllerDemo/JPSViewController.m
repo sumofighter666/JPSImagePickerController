@@ -105,7 +105,6 @@
 
 - (void)launchImagePicker {
     JPSImagePickerController *imagePicker = [[JPSImagePickerController alloc] init];
-    imagePicker.frontCameraEnabled = YES;
     imagePicker.delegate = self;
     [self presentViewController:imagePicker animated:YES completion:nil];
 }
