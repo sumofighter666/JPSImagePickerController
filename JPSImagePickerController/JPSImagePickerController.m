@@ -772,7 +772,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     titleLabel.textColor = [UIColor whiteColor];
     [useButton setTitle:@"Use Photo" forState:UIControlStateNormal];
     
-    [view addSubview:useButton];
+    [editingToolbarView addSubview:useButton];
     self.useButton = useButton;
     
     // Constraints
@@ -791,7 +791,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                 attribute:NSLayoutAttributeCenterY
                                                                multiplier:1.0
                                                                  constant:0.0];
-    [view addConstraints:@[right, vertical]];
+    [editingToolbarView addConstraints:@[right, vertical]];
 }
 
 - (void)addUseOverlayControl
