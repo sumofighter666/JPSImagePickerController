@@ -853,30 +853,29 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)updateSubviewsHiddenFromState
 {
-    [self updateCapturingToolbarViewHidden];
-    [self updateEditingToolbarViewHidden];
-    
-    [self updateFlashButtonHidden];
-    [self updateFlashOverlayControlHidden];
-    [self updateCameraSwitchButtonHidden];
-    [self updateCameraSwitchOverlayControlHidden];
     [self updateCapturePreviewViewHidden];
     [self updatePreviewImageViewHidden];
-    [self updateRetakeButtonHidden];
-    [self updateRetakeOverlayControlHidden];
-    [self updateUseButtonHidden];
-    [self updateUseOverlayControlHidden];
     
+    [self updateCapturingToolbarViewHidden];
+    [self updateCameraSwitchButtonAndOverlayControlHidden];
     [self updateCameraButtonHidden];
-    [self updateCancelButtonHidden];
-    [self updateCancelOverlayControlHidden];
+    [self updateCancelButtonAndOverlayControlHidden];
+    
+    [self updateEditingToolbarViewHidden];
+    [self updateRetakeButtonAndOverlayControlHidden];
+    [self updateUseButtonAndOverlayControlHidden];
+    
+    [self updateFlashButtonAndOverlayControlHidden];
 }
 
 - (void)updateCapturingToolbarViewHidden
 {
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    JPSImagePickerControllerState state = self.state;
     
-    BOOL visible = capturing;
+    BOOL capturing = (state == JPSImagePickerControllerStateCapturing);
+    BOOL beginning = (state == JPSImagePickerControllerStateBeginningCapture);
+    
+    BOOL visible = (beginning ||capturing);
     
     self.capturingToolbarView.hidden = !visible;
 }
@@ -890,7 +889,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.editingToolbarView.hidden = !visible;
 }
 
-- (void)updateFlashButtonHidden
+- (void)updateFlashButtonAndOverlayControlHidden
 {
     BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
     BOOL deviceHasFlash = self.currentDevice.hasFlash;
@@ -898,43 +897,26 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     BOOL visible = deviceHasFlash && !capturing;
     
     self.flashButton.hidden = !visible;
-}
-
-- (void)updateFlashOverlayControlHidden
-{
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
-    BOOL deviceHasFlash = self.currentDevice.hasFlash;
-    
-    BOOL visible = deviceHasFlash && !capturing;
-    
     self.flashOverlayControl.hidden = !visible;
 }
 
-- (void)updateCameraSwitchButtonHidden
+- (void)updateCameraSwitchButtonAndOverlayControlHidden
 {
+    JPSImagePickerControllerState state = self.state;
+    
     BOOL frontCameraEnabled = self.frontCameraEnabled;
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    BOOL capturing = (state == JPSImagePickerControllerStateCapturing);
+    BOOL beginning = (state == JPSImagePickerControllerStateBeginningCapture);
     
     BOOL frontCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
     BOOL rearCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
     BOOL twoCamerasAvailable = frontCameraAvailable && rearCameraAvailable;
     
-    BOOL visible = frontCameraEnabled && capturing && twoCamerasAvailable;
+    BOOL visible = frontCameraEnabled
+                    && (beginning || capturing)
+                    && twoCamerasAvailable;
     
     self.cameraSwitchButton.hidden = !visible;
-}
-
-- (void)updateCameraSwitchOverlayControlHidden
-{
-    BOOL frontCameraEnabled = self.frontCameraEnabled;
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
-    
-    BOOL frontCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
-    BOOL rearCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
-    BOOL twoCamerasAvailable = frontCameraAvailable && rearCameraAvailable;
-    
-    BOOL visible = frontCameraEnabled && capturing && twoCamerasAvailable;
-    
     self.cameraSwitchOverlayControl.hidden = !visible;
 }
 
@@ -956,67 +938,49 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.previewImageView.hidden = !visible;
 }
 
-- (void)updateRetakeButtonHidden
+- (void)updateRetakeButtonAndOverlayControlHidden
 {
     BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
     
     BOOL visible = captured;
     
     self.retakeButton.hidden = !visible;
-}
-
-- (void)updateRetakeOverlayControlHidden
-{
-    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
-    
-    BOOL visible = captured;
-    
     self.retakeOverlayControl.hidden = !visible;
 }
 
-- (void)updateUseButtonHidden
+- (void)updateUseButtonAndOverlayControlHidden
 {
     BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
     
     BOOL visible = captured;
     
     self.useButton.hidden = !visible;
-}
-
-- (void)updateUseOverlayControlHidden
-{
-    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
-    
-    BOOL visible = captured;
-    
     self.useOverlayControl.hidden = !visible;
 }
 
 - (void)updateCameraButtonHidden
 {
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    JPSImagePickerControllerState state = self.state;
     
-    BOOL visible = capturing;
+    BOOL capturing = (state == JPSImagePickerControllerStateCapturing);
+    BOOL beginning = (state == JPSImagePickerControllerStateBeginningCapture);
+    
+    BOOL visible = (beginning || capturing);
     
     self.cameraButton.hidden = !visible;
 }
 
-- (void)updateCancelButtonHidden
+- (void)updateCancelButtonAndOverlayControlHidden
 {
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    JPSImagePickerControllerState state = self.state;
     
-    BOOL visible = capturing;
+    BOOL capturing = (state == JPSImagePickerControllerStateCapturing);
+    BOOL beginning = (state == JPSImagePickerControllerStateBeginningCapture);
+    
+    BOOL visible = (beginning || capturing);
     
     self.cancelButton.hidden = !visible;
-}
-
-- (void)updateCancelOverlayControlHidden
-{
-    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
-    
-    BOOL visible = capturing;
-    
-    self.cancelButton.hidden = !visible;
+    self.cancelOverlayControl.hidden = !visible;
 }
 
 - (void)updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation
