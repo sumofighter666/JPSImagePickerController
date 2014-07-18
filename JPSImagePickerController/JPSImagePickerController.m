@@ -724,7 +724,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                       forwardingTarget:retakeButton];
     [retakeOverlayControl addTarget:self action:@selector(retake:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view addSubview:retakeOverlayControl];
+    [editingToolbarView addSubview:retakeOverlayControl];
     self.retakeOverlayControl = retakeOverlayControl;
     
     // Constraints
@@ -757,7 +757,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                              attribute:NSLayoutAttributeTrailing
                                                             multiplier:1.0
                                                               constant:0.0];
-    [view addConstraints:@[top, right, bottom, left]];
+    [editingToolbarView addConstraints:@[top, right, bottom, left]];
 }
 
 - (void)addUseButton
