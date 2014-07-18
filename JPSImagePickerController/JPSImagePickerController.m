@@ -609,7 +609,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                             forwardingTarget:cameraSwitchButton];
     [cameraSwitchOverlayControl addTarget:self action:@selector(didPressCameraSwitchButton:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view addSubview:cameraSwitchOverlayControl];
+    [capturingToolbarView addSubview:cameraSwitchOverlayControl];
     self.cameraSwitchOverlayControl = cameraSwitchOverlayControl;
     
     // Constraints
@@ -642,7 +642,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
                                                                constant:JPSImagePickerControllerButtonInset];
-    [view addConstraints:@[left, top, right, bottom]];
+    [capturingToolbarView addConstraints:@[left, top, right, bottom]];
 }
 
 - (void)addPreviewImageView
