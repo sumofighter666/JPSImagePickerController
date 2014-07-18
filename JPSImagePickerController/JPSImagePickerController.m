@@ -691,7 +691,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     titleLabel.textColor = [UIColor whiteColor];
     [retakeButton setTitle:@"Retake" forState:UIControlStateNormal];
     
-    [view addSubview:retakeButton];
+    [editingToolbarView addSubview:retakeButton];
     self.retakeButton = retakeButton;
     
     // Constraints
@@ -710,7 +710,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                                 attribute:NSLayoutAttributeCenterY
                                                                multiplier:1.0
                                                                  constant:0.0];
-    [view addConstraints:@[left, vertical]];
+    [editingToolbarView addConstraints:@[left, vertical]];
 }
 
 - (void)addRetakeOverlayControl
