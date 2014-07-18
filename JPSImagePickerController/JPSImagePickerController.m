@@ -421,7 +421,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
     [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
     
-    [view addSubview:cancelButton];
+    [capturingToolbarView addSubview:cancelButton];
     self.cancelButton = cancelButton;
     
     // Constraints
@@ -436,11 +436,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:cancelButton
                                                               attribute:NSLayoutAttributeBottom
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:view
+                                                                 toItem:capturingToolbarView
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0f
                                                                constant:-19.5f];
-    [view addConstraints:@[horizontal, bottom]];
+    [capturingToolbarView addConstraints:@[horizontal, bottom]];
 }
 
 - (void)addCancelOverlayControl
