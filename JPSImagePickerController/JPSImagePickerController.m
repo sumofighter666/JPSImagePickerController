@@ -905,7 +905,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 #pragma mark - Actions
 
-- (void)takePicture:(id)sender
+- (IBAction)takePicture:(id)sender
 {
     if (!self.cameraButton.enabled) return;
     
@@ -1015,8 +1015,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                     completion:nil];
 }
 
-#pragma mark - Preview Actions
-
 - (IBAction)retake:(id)sender
 {
     self.state = JPSImagePickerControllerStateCapturing;
@@ -1024,7 +1022,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.cameraButton.enabled = YES;
 }
 
-- (void)use:(id)sender
+- (IBAction)use:(id)sender
 {
     [self delegateCalloutDidConfirmImage:self.previewImage];
 }
