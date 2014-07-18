@@ -1091,6 +1091,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         }
     }];
     
+    setupOperation.queuePriority = NSOperationQueuePriorityVeryHigh;
     [self.captureQueue addOperation:setupOperation];
 }
 
@@ -1113,6 +1114,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
             strong_self.session = nil;
         }
     }];
+    teardownOperation.queuePriority = NSOperationQueuePriorityVeryHigh;
     [self.captureQueue addOperation:teardownOperation];
 }
 
