@@ -980,6 +980,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (IBAction)didPressCameraSwitchButton:(id)sender
 {
+    if (!self.cameraSwitchButton.enabled) return;
+    self.cameraSwitchButton.enabled = NO;
     // Input Switch
     __weak typeof(self) weak_self = self;
     NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
@@ -1001,7 +1003,12 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
             NSError *error = nil;
             input = [AVCaptureDeviceInput deviceInputWithDevice:device
                                                           error:&error];
-            if (!input) return;
+            if (!input) {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    self.cameraSwitchButton.enabled = YES;
+                });
+                return;
+            }
             
             [session addInput:input];
             [session startRunning];
@@ -1009,6 +1016,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
             dispatch_sync(dispatch_get_main_queue(), ^{
                 __strong typeof(self) strong_self = weak_self;
                 strong_self.capturePreviewView.alpha = 1.0;
+                self.cameraSwitchButton.enabled = YES;
             });
         }
     }];
