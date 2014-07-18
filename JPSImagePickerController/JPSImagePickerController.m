@@ -261,19 +261,20 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [self addCapturePreviewView];
     
     [self addCapturingToolbarView];
-    [self addEditingToolbarView];
-    
+    [self addCameraSwitchButton];
+    [self addCameraSwitchOverlayControl];
     [self addCameraButton];
     [self addCancelButton];
     [self addCancelOverlayControl];
-    [self addFlashButton];
-    [self addFlashOverlayControl];
-    [self addCameraSwitchButton];
-    [self addCameraSwitchOverlayControl];
+    
+    [self addEditingToolbarView];
     [self addUseButton];
     [self addUseOverlayControl];
     [self addRetakeButton];
     [self addRetakeOverlayControl];
+    
+    [self addFlashButton];
+    [self addFlashOverlayControl];
     
     [self updateSubviewsHiddenFromState];
 }
