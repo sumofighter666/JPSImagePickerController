@@ -310,7 +310,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     // View
     UIButton *cameraButton = [JPSCameraButton button];
-    [cameraButton addTarget:self action:@selector(takePicture:) forControlEvents:UIControlEventTouchUpInside];
+    [cameraButton addTarget:self action:@selector(didPressCameraButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:cameraButton];
     self.cameraButton = cameraButton;
@@ -792,7 +792,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         self.volumeButtonHandler = [JPSVolumeButtonHandler volumeButtonHandlerWithUpBlock:^{
             __strong typeof(self) strong_self = weak_self;
             if (strong_self) {
-                [strong_self takePicture:nil];
+                [strong_self didPressCameraButton:nil];
             }
         }
                                                                                 downBlock:nil];
@@ -911,7 +911,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 #pragma mark - Actions
 
-- (IBAction)takePicture:(id)sender
+- (IBAction)didPressCameraButton:(id)sender
 {
     if (!self.cameraButton.enabled) return;
     
