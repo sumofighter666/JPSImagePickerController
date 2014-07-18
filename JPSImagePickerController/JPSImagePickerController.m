@@ -34,8 +34,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 @property (nonatomic) UIView *editingToolbarView;
 @property (nonatomic) UIButton *cameraButton;
 @property (nonatomic) UIButton *cancelButton;
+@property (nonatomic) UIControl *cancelOverlayControl;
 @property (nonatomic) UIButton *flashButton;
+@property (nonatomic) UIControl *flashOverlayControl;
 @property (nonatomic) UIButton *cameraSwitchButton;
+@property (nonatomic) UIControl *cameraSwitchOverlayControl;
 @property (nonatomic) UIButton *retakeButton;
 @property (nonatomic) UIControl *retakeOverlayControl;
 @property (nonatomic) UIButton *useButton;
@@ -262,8 +265,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     [self addCameraButton];
     [self addCancelButton];
+    [self addCancelOverlayControl];
     [self addFlashButton];
+    [self addFlashOverlayControl];
     [self addCameraSwitchButton];
+    [self addCameraSwitchOverlayControl];
     [self addUseButton];
     [self addUseOverlayControl];
     [self addRetakeButton];
@@ -413,14 +419,13 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     // View
     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
     cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
-    cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
     [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [cancelButton addTarget:self action:@selector(didPressCancelButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:cancelButton];
     self.cancelButton = cancelButton;
     
     // Constraints
+    cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
     NSLayoutConstraint *horizontal = [NSLayoutConstraint constraintWithItem:cancelButton
                                                              attribute:NSLayoutAttributeCenterX
                                                              relatedBy:NSLayoutRelationEqual
@@ -438,6 +443,53 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [view addConstraints:@[horizontal, bottom]];
 }
 
+- (void)addCancelOverlayControl
+{
+    UIView *view = self.view;
+    UIView *capturingToolbarView = self.capturingToolbarView;
+    UIButton *cancelButton = self.cancelButton;
+    
+    // View
+    UIControl *cancelOverlayControl = [[BNRStateForwardingControl alloc] initWithFrame:CGRectMake(0, 0, 100, 100)
+                                                                      forwardingTarget:cancelButton];
+    [cancelOverlayControl addTarget:self action:@selector(didPressCancelButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:cancelOverlayControl];
+    self.cancelOverlayControl = cancelOverlayControl;
+    
+    // Constraints
+    cancelOverlayControl.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:cancelOverlayControl
+                                                             attribute:NSLayoutAttributeRight
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:capturingToolbarView
+                                                             attribute:NSLayoutAttributeRight
+                                                            multiplier:1.0
+                                                              constant:0.0];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:cancelOverlayControl
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:capturingToolbarView
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0
+                                                               constant:0.0];
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:cancelOverlayControl
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:capturingToolbarView
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0
+                                                             constant:0.0];
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:cancelOverlayControl
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:cancelButton
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:-JPSImagePickerControllerButtonInset];
+    [view addConstraints:@[right, bottom, left, top]];
+}
+
 - (void)addFlashButton
 {
     UIView *view = self.view;
@@ -448,7 +500,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     UIImage *flashButtonImage = [[UIImage imageNamed:@"JPSImagePickerController.bundle/flash_button"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
     [flashButton setImage:flashButtonImage forState:UIControlStateNormal];
     [flashButton setTitle:@" On" forState:UIControlStateNormal];
-    [flashButton addTarget:self action:@selector(didPressFlashButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:flashButton];
     self.flashButton = flashButton;
@@ -471,6 +522,51 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [view addConstraints:@[left, top]];
 }
 
+- (void)addFlashOverlayControl
+{
+    UIView *view = self.view;
+    UIButton *flashButton = self.flashButton;
+    
+    // View
+    UIControl *flashOverlayControl = [[BNRStateForwardingControl alloc] initWithFrame:CGRectMake(0, 0, 100, 100)
+                                                                     forwardingTarget:flashButton];
+    [flashOverlayControl addTarget:self action:@selector(didPressFlashButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:flashOverlayControl];
+    self.flashOverlayControl = flashOverlayControl;
+    
+    // Constraints
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:flashOverlayControl
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:view
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0
+                                                             constant:0.0];
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:flashOverlayControl
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:view
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:0.0];
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:flashOverlayControl
+                                                             attribute:NSLayoutAttributeRight
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:flashButton
+                                                             attribute:NSLayoutAttributeRight
+                                                            multiplier:1.0
+                                                              constant:JPSImagePickerControllerButtonInset];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:flashOverlayControl
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:flashButton
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0
+                                                               constant:JPSImagePickerControllerButtonInset];
+    [view addConstraints:@[left, top, right, bottom]];
+}
+
 - (void)addCameraSwitchButton
 {
     UIView *view = self.view;
@@ -480,7 +576,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     UIButton *cameraSwitchButton = [UIButton buttonWithType:UIButtonTypeSystem];
     cameraSwitchButton.translatesAutoresizingMaskIntoConstraints = NO;
     [cameraSwitchButton setBackgroundImage:[UIImage imageNamed:@"JPSImagePickerController.bundle/camera_switch_button"] forState:UIControlStateNormal];
-    [cameraSwitchButton addTarget:self action:@selector(didPressCameraSwitchButton:) forControlEvents:UIControlEventTouchUpInside];
     
     [view addSubview:cameraSwitchButton];
     self.cameraSwitchButton = cameraSwitchButton;
@@ -501,6 +596,53 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                           multiplier:1.0
                                                             constant:JPSImagePickerControllerButtonInset];
     [view addConstraints:@[horizontal, top]];
+}
+
+- (void)addCameraSwitchOverlayControl
+{
+    UIView *view = self.view;
+    UIView *capturingToolbarView = self.capturingToolbarView;
+    UIButton *cameraSwitchButton = self.cameraSwitchButton;
+    
+    // View
+    UIControl *cameraSwitchOverlayControl = [[BNRStateForwardingControl alloc] initWithFrame:CGRectMake(0, 0, 100, 100)
+                                                                            forwardingTarget:cameraSwitchButton];
+    [cameraSwitchOverlayControl addTarget:self action:@selector(didPressCameraSwitchButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:cameraSwitchOverlayControl];
+    self.cameraSwitchOverlayControl = cameraSwitchOverlayControl;
+    
+    // Constraints
+    cameraSwitchOverlayControl.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:cameraSwitchOverlayControl
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:capturingToolbarView
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0
+                                                             constant:0.0];
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:cameraSwitchOverlayControl
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:capturingToolbarView
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:0.0];
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:cameraSwitchOverlayControl
+                                                             attribute:NSLayoutAttributeRight
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:capturingToolbarView
+                                                             attribute:NSLayoutAttributeRight
+                                                            multiplier:1.0
+                                                              constant:0.0];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:cameraSwitchOverlayControl
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:cameraSwitchButton
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0
+                                                               constant:JPSImagePickerControllerButtonInset];
+    [view addConstraints:@[left, top, right, bottom]];
 }
 
 - (void)addPreviewImageView
@@ -707,7 +849,9 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [self updateEditingToolbarViewHidden];
     
     [self updateFlashButtonHidden];
+    [self updateFlashOverlayControlHidden];
     [self updateCameraSwitchButtonHidden];
+    [self updateCameraSwitchOverlayControlHidden];
     [self updateCapturePreviewViewHidden];
     [self updatePreviewImageViewHidden];
     [self updateRetakeButtonHidden];
@@ -717,6 +861,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     [self updateCameraButtonHidden];
     [self updateCancelButtonHidden];
+    [self updateCancelOverlayControlHidden];
 }
 
 - (void)updateCapturingToolbarViewHidden
@@ -747,6 +892,16 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.flashButton.hidden = !visible;
 }
 
+- (void)updateFlashOverlayControlHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    BOOL deviceHasFlash = self.currentDevice.hasFlash;
+    
+    BOOL visible = deviceHasFlash && !capturing;
+    
+    self.flashOverlayControl.hidden = !visible;
+}
+
 - (void)updateCameraSwitchButtonHidden
 {
     BOOL frontCameraEnabled = self.frontCameraEnabled;
@@ -759,6 +914,20 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     BOOL visible = frontCameraEnabled && capturing && twoCamerasAvailable;
     
     self.cameraSwitchButton.hidden = !visible;
+}
+
+- (void)updateCameraSwitchOverlayControlHidden
+{
+    BOOL frontCameraEnabled = self.frontCameraEnabled;
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL frontCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
+    BOOL rearCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
+    BOOL twoCamerasAvailable = frontCameraAvailable && rearCameraAvailable;
+    
+    BOOL visible = frontCameraEnabled && capturing && twoCamerasAvailable;
+    
+    self.cameraSwitchOverlayControl.hidden = !visible;
 }
 
 - (void)updateCapturePreviewViewHidden
@@ -825,6 +994,15 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 }
 
 - (void)updateCancelButtonHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL visible = capturing;
+    
+    self.cancelButton.hidden = !visible;
+}
+
+- (void)updateCancelOverlayControlHidden
 {
     BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
     
