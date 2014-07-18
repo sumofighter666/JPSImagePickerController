@@ -8,6 +8,7 @@
 
 #import "JPSViewController.h"
 #import "JPSImagePickerController.h"
+#import "NSLayoutConstraint+BNRMatchingSuperviewAdditions.h"
 
 @interface JPSViewController ()
     <JPSImagePickerDelegate,
@@ -27,9 +28,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
+    [self setupImageView];
     [self setupButton];
     [self setupAltButton];
-    [self setupImageView];
 }
 
 - (void)setupButton {
@@ -85,30 +86,25 @@
 }
 
 - (void)setupImageView {
+    UIView *view = self.view;
+    
     // Image View
-    _imageView = [[UIImageView alloc] init];
-    _imageView.translatesAutoresizingMaskIntoConstraints = NO;
-    _imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [self.view addSubview:_imageView];
+    UIImageView *imageView = [[UIImageView alloc] init];
+    imageView.translatesAutoresizingMaskIntoConstraints = NO;
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
+    
+    [view addSubview:imageView];
+    self.imageView = imageView;
     
     // Constraints
-    NSArray *vertical = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[_button][_imageView]|"
-                                                                options:0
-                                                                metrics:nil
-                                                                  views:NSDictionaryOfVariableBindings(_button, _imageView)];
-    NSArray *horizontal = [NSLayoutConstraint constraintsWithVisualFormat:@"|[_imageView]|"
-                                                                  options:0
-                                                                  metrics:nil
-                                                                    views:NSDictionaryOfVariableBindings(_imageView)];
-    [self.view addConstraints:vertical];
-    [self.view addConstraints:horizontal];
+    NSArray *constraints = [NSLayoutConstraint bnr_constraintsForView:imageView toMatchFrameOfView:view];
+    [view addConstraints:constraints];
 }
 
 #pragma mark - Actions
 
 - (void)launchImagePicker {
     JPSImagePickerController *imagePicker = [[JPSImagePickerController alloc] init];
-    imagePicker.zoomEnabled = NO;
     imagePicker.delegate = self;
     [self presentViewController:imagePicker animated:YES completion:nil];
 }
@@ -138,6 +134,12 @@
 
 - (void)picker:(JPSImagePickerController *)picker didConfirmImage:(UIImage *)picture {
     self.imageView.image = picture;
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)pickerDidCancel:(JPSImagePickerController *)picker
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - UIImagePickerControllerDelegate
@@ -145,6 +147,7 @@
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
     self.imageView.image = info[UIImagePickerControllerOriginalImage];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker

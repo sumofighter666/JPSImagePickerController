@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43CF512519785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 43CF512419785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m */; };
+		43CF51291978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 43CF51281978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m */; };
 		E81B9275189C1C41004C04FD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E81B9274189C1C41004C04FD /* Foundation.framework */; };
 		E81B9277189C1C41004C04FD /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E81B9276189C1C41004C04FD /* CoreGraphics.framework */; };
 		E81B9279189C1C41004C04FD /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E81B9278189C1C41004C04FD /* UIKit.framework */; };
@@ -46,6 +48,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		43CF512319785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSLayoutConstraint+BNRMatchingSuperviewAdditions.h"; sourceTree = "<group>"; };
+		43CF512419785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSLayoutConstraint+BNRMatchingSuperviewAdditions.m"; sourceTree = "<group>"; };
+		43CF51271978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JPSAVCaptureVideoPreviewLayerHostingView.h; sourceTree = "<group>"; };
+		43CF51281978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JPSAVCaptureVideoPreviewLayerHostingView.m; sourceTree = "<group>"; };
 		E81B9271189C1C41004C04FD /* JPSImagePickerControllerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JPSImagePickerControllerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E81B9274189C1C41004C04FD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		E81B9276189C1C41004C04FD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -190,6 +196,10 @@
 				E84268EA189C1DA40024831A /* JPSVolumeButtonHandler.m */,
 				E84268EB189C1DA40024831A /* UIImage+DrawBlock.h */,
 				E84268EC189C1DA40024831A /* UIImage+DrawBlock.m */,
+				43CF512319785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.h */,
+				43CF512419785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m */,
+				43CF51271978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.h */,
+				43CF51281978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m */,
 			);
 			path = JPSImagePickerController;
 			sourceTree = "<group>";
@@ -294,8 +304,10 @@
 			files = (
 				E84268FD189C1E8B0024831A /* JPSViewController.m in Sources */,
 				E84268ED189C1DA40024831A /* JPSCameraButton.m in Sources */,
+				43CF512519785387008BADC7 /* NSLayoutConstraint+BNRMatchingSuperviewAdditions.m in Sources */,
 				E81B9285189C1C41004C04FD /* JPSAppDelegate.m in Sources */,
 				E81B9281189C1C41004C04FD /* main.m in Sources */,
+				43CF51291978B57B008BADC7 /* JPSAVCaptureVideoPreviewLayerHostingView.m in Sources */,
 				E84268F1189C1DA40024831A /* JPSImagePickerController.m in Sources */,
 				E84268F3189C1DA40024831A /* JPSVolumeButtonHandler.m in Sources */,
 				E84268F5189C1DA40024831A /* UIImage+DrawBlock.m in Sources */,

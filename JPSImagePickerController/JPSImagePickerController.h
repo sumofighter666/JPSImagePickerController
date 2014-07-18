@@ -16,19 +16,8 @@
 
 // Confirmation screen enabled, default YES
 @property (nonatomic, assign) BOOL editingEnabled;
-// Zooming in confirmation screen enabled, default YES
-@property (nonatomic, assign) BOOL zoomEnabled;
 // Volume up button as trigger enabled, default YES
 @property (nonatomic, assign) BOOL volumeButtonTakesPicture;
-
-#pragma mark - Confirmation Overlay Options
-
-// String shown above image in confirmation screen, default nil
-@property (nonatomic, copy)   NSString *confirmationString;
-// String shown overlayed on image in confirmation screen, default nil
-@property (nonatomic, copy)   NSString *confirmationOverlayString;
-// Background color of string shown overlayed on image in confirmation screen, default nil
-@property (nonatomic, strong) UIColor  *confirmationOverlayBackgroundColor;
 
 #pragma mark - Delegate
 

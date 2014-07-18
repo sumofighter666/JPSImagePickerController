@@ -10,30 +10,45 @@
 #import "JPSCameraButton.h"
 #import <AVFoundation/AVFoundation.h>
 #import "JPSVolumeButtonHandler.h"
+#import "NSLayoutConstraint+BNRMatchingSuperviewAdditions.h"
+#import "JPSAVCaptureVideoPreviewLayerHostingView.h"
 
-@interface JPSImagePickerController (/*Lifetime State: Views*/) <UIScrollViewDelegate>
-@property (nonatomic) UILabel *confirmationLabel;
-@property (nonatomic) UILabel *confirmationOverlayLabel;
+static AVCaptureVideoOrientation AVCaptureVideoOrientationFromUIDeviceOrientation(UIInterfaceOrientation deviceOrientation);
 
-@property (nonatomic) UIView *capturePreviewView;
-@property (nonatomic) UIImageView * previewImageView;
-@property (nonatomic) AVCaptureVideoPreviewLayer *capturePreviewLayer;
+static CGFloat JPSImagePickerControllerButtonInset = 15.5;
 
+typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
+    JPSImagePickerControllerStateError = -1,
+    JPSImagePickerControllerStateUnknown = 0,
+    JPSImagePickerControllerStateBeginningCapture,
+    JPSImagePickerControllerStateCapturing,
+    JPSImagePickerControllerStateCaptured,
+};
+
+@interface JPSImagePickerController (/*Lifetime State: Views*/)
+@property (nonatomic) UIImageView *previewImageView;
+@property (nonatomic) JPSAVCaptureVideoPreviewLayerHostingView *capturePreviewView;
+
+@property (nonatomic) UIView *capturingToolbarView;
+@property (nonatomic) UIView *editingToolbarView;
 @property (nonatomic) UIButton *cameraButton;
 @property (nonatomic) UIButton *cancelButton;
 @property (nonatomic) UIButton *flashButton;
 @property (nonatomic) UIButton *cameraSwitchButton;
-@property (nonatomic) UIButton* retakeButton;
-@property (nonatomic) UIButton* useButton;
+@property (nonatomic) UIButton *retakeButton;
+@property (nonatomic) UIButton *useButton;
 @end
 
 @interface JPSImagePickerController (/*Lifetime State*/)
 @property (nonatomic) AVCaptureSession *session;
+@property (nonatomic) AVCaptureStillImageOutput *captureStillImageOutput;
 @property (nonatomic) NSOperationQueue *captureQueue;
 @property (nonatomic) JPSVolumeButtonHandler *volumeButtonHandler;
 @end
 
 @interface JPSImagePickerController (/*State*/)
+@property (nonatomic) JPSImagePickerControllerState state;
+
 @property (nonatomic) UIImage *previewImage;
 @property (nonatomic) UIImageOrientation imageOrientation;
 @end
@@ -45,269 +60,71 @@
 - (id)init {
     self = [super init];
     if (self) {
-        self.editingEnabled = YES;
-        self.zoomEnabled = YES;
-        self.volumeButtonTakesPicture = YES;
+        _captureQueue = [[NSOperationQueue alloc] init];
+        
+        _editingEnabled = YES;
+        _volumeButtonTakesPicture = YES;
     }
     return self;
 }
 
 - (void)loadView
 {
-    self.view = [[UIView alloc] init];
-    self.view.tintColor = [UIColor whiteColor];
-    self.view.backgroundColor = [UIColor blackColor];
-    self.captureQueue = [[NSOperationQueue alloc] init];
-    [self addCameraButton];
-    [self addCancelButton];
-    [self addFlashButton];
-    [self addCameraSwitchButton];
+    UIView *view = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
+    view.tintColor = [UIColor whiteColor];
+    view.backgroundColor = [UIColor blackColor];
+    self.view = view;
+    
+    [self addSubviews];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
     [super viewWillAppear:animated];
-    [self enableCapture];
+    [self setupSession];
 }
 
-- (void)viewDidAppear:(BOOL)animated {
+- (void)viewDidAppear:(BOOL)animated
+{
     [super viewDidAppear:animated];
-    [self addVolumeButtonHandler];
+    [self teardownVolumeButtonHandler];
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    
+    [self teardownVolumeButtonHandler];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
     [super viewDidDisappear:animated];
-    [self.captureQueue cancelAllOperations];
-    [self.capturePreviewLayer removeFromSuperlayer];
-    for (AVCaptureInput *input in self.session.inputs) {
-        [self.session removeInput:input];
-    }
-    for (AVCaptureOutput *output in self.session.outputs) {
-        [self.session removeOutput:output];
-    }
-    [self.session stopRunning];
-    self.session = nil;
-    self.volumeButtonHandler = nil;
+    
+    [self teardownSession];
 }
 
 #pragma mark - Accessors
 
-- (void)setConfirmationString:(NSString *)confirmationString {
-    _confirmationString = confirmationString;
-    self.confirmationLabel.text = self.confirmationString;
-}
-
-- (void)setConfirmationOverlayString:(NSString *)confirmationOverlayString {
-    _confirmationOverlayString = confirmationOverlayString;
-    self.confirmationOverlayLabel.text = self.confirmationOverlayString;
-}
-
-- (void)setConfirmationOverlayBackgroundColor:(UIColor *)confirmationOverlayBackgroundColor {
-    _confirmationOverlayBackgroundColor = confirmationOverlayBackgroundColor;
-    self.confirmationOverlayLabel.backgroundColor = confirmationOverlayBackgroundColor;
-}
-
-#pragma mark - Setup UI
-
-- (void)addVolumeButtonHandler {
-    if (self.volumeButtonTakesPicture) {
-        self.volumeButtonHandler = [JPSVolumeButtonHandler volumeButtonHandlerWithUpBlock:^{
-            [self takePicture];
-        } downBlock:nil];
-    }
-}
-
-- (void)addCameraButton {
-    self.cameraButton = [JPSCameraButton button];
-    self.cameraButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.cameraButton addTarget:self action:@selector(takePicture) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.cameraButton];
+- (void)setSession:(AVCaptureSession *)session
+{
+    _session = session;
     
-    // Constraints
-    NSLayoutConstraint *horizontal = [NSLayoutConstraint constraintWithItem:self.cameraButton
-                                                                  attribute:NSLayoutAttributeCenterX
-                                                                  relatedBy:NSLayoutRelationEqual
-                                                                     toItem:self.view
-                                                                  attribute:NSLayoutAttributeCenterX
-                                                                 multiplier:1.0f
-                                                                   constant:0];
-    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:self.cameraButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0f
-                                                               constant:-3.5f];
-    NSLayoutConstraint *width = [NSLayoutConstraint constraintWithItem:self.cameraButton
-                                                             attribute:NSLayoutAttributeWidth
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:nil
-                                                             attribute:NSLayoutAttributeNotAnAttribute
-                                                            multiplier:1.0f
-                                                              constant:66.0f];
-    NSLayoutConstraint *height = [NSLayoutConstraint constraintWithItem:self.cameraButton
-                                                              attribute:NSLayoutAttributeHeight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:1.0f
-                                                               constant:66.0f];
-    [self.view addConstraints:@[horizontal, bottom, width, height]];
+    self.capturePreviewView.layer.session = session;
+    [self updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation];
 }
 
-- (void)addCancelButton {
-    self.cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
-    self.cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [self.cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.cancelButton];
+- (void)setPreviewImage:(UIImage *)previewImage
+{
+    _previewImage = previewImage;
     
-    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:self.cancelButton
-                                                            attribute:NSLayoutAttributeLeft
-                                                            relatedBy:NSLayoutRelationEqual
-                                                               toItem:self.view
-                                                            attribute:NSLayoutAttributeLeft
-                                                           multiplier:1.0f
-                                                             constant:15.5f];
-    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:self.cancelButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0f
-                                                               constant:-19.5f];
-    [self.view addConstraints:@[left, bottom]];
+    self.previewImageView.image = previewImage;
 }
 
-- (void)addFlashButton {
-    self.flashButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.flashButton.translatesAutoresizingMaskIntoConstraints = NO;
-    UIImage *flashButtonImage = [[UIImage imageNamed:@"JPSImagePickerController.bundle/flash_button"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    [self.flashButton setImage:flashButtonImage forState:UIControlStateNormal];
-    [self.flashButton setTitle:@" On" forState:UIControlStateNormal];
-    [self.flashButton addTarget:self action:@selector(didPressFlashButton) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.flashButton];
-    
-    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:self.flashButton
-                                                            attribute:NSLayoutAttributeLeft
-                                                            relatedBy:NSLayoutRelationEqual
-                                                               toItem:self.view
-                                                            attribute:NSLayoutAttributeLeft
-                                                           multiplier:1.0f
-                                                             constant:8.0f];
-    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:self.flashButton
-                                                           attribute:NSLayoutAttributeTop
-                                                           relatedBy:NSLayoutRelationEqual
-                                                              toItem:self.view
-                                                           attribute:NSLayoutAttributeTop
-                                                          multiplier:1.0f
-                                                            constant:9.5f];
-    [self.view addConstraints:@[left, top]];
-}
+#pragma mark - Accessors: Capture Devices
 
-- (void)addCameraSwitchButton {
-    self.cameraSwitchButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.cameraSwitchButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.cameraSwitchButton setBackgroundImage:[UIImage imageNamed:@"JPSImagePickerController.bundle/camera_switch_button"] forState:UIControlStateNormal];
-    [self.cameraSwitchButton addTarget:self action:@selector(didPressCameraSwitchButton) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.cameraSwitchButton];
-    
-    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:self.cameraSwitchButton
-                                                             attribute:NSLayoutAttributeRight
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:self.view
-                                                             attribute:NSLayoutAttributeRight
-                                                            multiplier:1.0f
-                                                              constant:-7.5f];
-    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:self.cameraSwitchButton
-                                                           attribute:NSLayoutAttributeTop
-                                                           relatedBy:NSLayoutRelationEqual
-                                                              toItem:self.view
-                                                           attribute:NSLayoutAttributeTop
-                                                          multiplier:1.0f
-                                                            constant:7.5f];
-    [self.view addConstraints:@[right, top]];
-}
-
-#pragma mark - UIViewController Overrides
-
-- (BOOL)prefersStatusBarHidden {
-    return YES;
-}
-
-#pragma mark - AVCapture
-
-- (void)enableCapture {
-    if (self.session) return;
-    
-    self.flashButton.hidden = YES;
-    self.cameraSwitchButton.hidden = YES;
-    NSBlockOperation *operation = [self captureOperation];
-    operation.completionBlock = ^{
-        [self operationCompleted];
-    };
-    operation.queuePriority = NSOperationQueuePriorityVeryHigh;
-    [self.captureQueue addOperation:operation];
-}
-
-- (NSBlockOperation *)captureOperation {
-    NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
-        self.session = [[AVCaptureSession alloc] init];
-        AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-        NSError *error = nil;
-        
-        AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
-        if (!input) return;
-        
-        [self.session addInput:input];
-        
-        // Turn on point autofocus for middle of view
-        [device lockForConfiguration:&error];
-        if (!error) {
-            if ([device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
-                device.focusPointOfInterest = CGPointMake(0.5,0.5);
-                device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
-            }
-            if ([device isFlashModeSupported:AVCaptureFlashModeOn]) {
-                device.flashMode = AVCaptureFlashModeOn;
-            }
-        }
-        [device unlockForConfiguration];
-        
-        self.capturePreviewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
-        self.capturePreviewLayer.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - 69.0f - 73.0f);
-        self.capturePreviewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-        
-        // Still Image Output
-        AVCaptureStillImageOutput *stillOutput = [[AVCaptureStillImageOutput alloc] init];
-        stillOutput.outputSettings = @{AVVideoCodecKey: AVVideoCodecJPEG};
-        [self.session addOutput:stillOutput];
-    }];
-    return operation;
-}
-
-- (void)operationCompleted {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (!self.session) return;
-        self.capturePreviewView = [[UIView alloc] initWithFrame:CGRectOffset(self.capturePreviewLayer.frame, 0, 69.0f)];
-#if TARGET_IPHONE_SIMULATOR
-        self.capturePreviewView.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height - 73.0f);
-        self.capturePreviewView.backgroundColor = [UIColor redColor];
-#endif
-        [self.view insertSubview:self.capturePreviewView atIndex:0];
-        [self.capturePreviewView.layer addSublayer:self.capturePreviewLayer];
-        [self.session startRunning];
-        if ([[self currentDevice] hasFlash]) {
-            self.flashButton.hidden = NO;
-        }
-        if ([UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront] &&
-            [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear]) {
-            self.cameraSwitchButton.hidden = NO;
-        }
-    });
-}
-
-- (AVCaptureDevice *)frontCamera {
+- (AVCaptureDevice *)frontCamera
+{
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     for (AVCaptureDevice *device in devices) {
         if (device.position == AVCaptureDevicePositionFront) {
@@ -317,50 +134,714 @@
     return nil;
 }
 
-- (AVCaptureDevice *)currentDevice {
+- (AVCaptureDevice *)currentDevice
+{
     return [(AVCaptureDeviceInput *)self.session.inputs.firstObject device];
+}
+
+- (AVCaptureDevice *)captureDeviceForCaptureDevicePosition:(AVCaptureDevicePosition)position
+{
+    AVCaptureDevice *result = nil;
+    
+    switch (position) {
+        case AVCaptureDevicePositionBack: {
+            result = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        } break;
+        case AVCaptureDevicePositionFront: {
+            result = [self frontCamera];
+        } break;
+        case AVCaptureDevicePositionUnspecified: {
+            result = nil;
+        } break;
+    }
+    
+    return result;
+}
+
+- (AVCaptureDevicePosition)captureDevicePositionAfterCaptureDevicePosition:(AVCaptureDevicePosition)currentPosition
+{
+    AVCaptureDevicePosition result = AVCaptureDevicePositionUnspecified;
+    
+    switch (currentPosition) {
+        case AVCaptureDevicePositionFront: {
+            result = AVCaptureDevicePositionBack;
+        } break;
+        case AVCaptureDevicePositionBack: {
+            result = AVCaptureDevicePositionFront;
+        } break;
+        case AVCaptureDevicePositionUnspecified: {
+            result = AVCaptureDevicePositionUnspecified;
+        } break;
+    }
+    
+    return result;
+}
+
+#pragma mark - UIViewController Overrides
+
+- (void)updateViewConstraints
+{
+    [super updateViewConstraints];
+    
+}
+
+#pragma mark - Setup UI
+
+- (void)addSubviews
+{
+    [self addPreviewImageView];
+    [self addCapturePreviewView];
+    
+    [self addCapturingToolbarView];
+    [self addEditingToolbarView];
+    
+    [self addCameraButton];
+    [self addCancelButton];
+    [self addFlashButton];
+    [self addCameraSwitchButton];
+    [self addUseButton];
+    [self addRetakeButton];
+    
+    [self updateSubviewsHiddenFromState];
+}
+
+- (void)addCapturingToolbarView
+{
+    UIView *view = self.view;
+    
+    // View
+    UIView *capturingToolbarView = [[UIView alloc] initWithFrame:view.bounds];
+    capturingToolbarView.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
+    
+    [view addSubview:capturingToolbarView];
+    self.capturingToolbarView = capturingToolbarView;
+    
+    // Constraints
+    capturingToolbarView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *topConstraint = [NSLayoutConstraint constraintWithItem:capturingToolbarView
+                                                                     attribute:NSLayoutAttributeTop
+                                                                     relatedBy:NSLayoutRelationEqual
+                                                                        toItem:view
+                                                                     attribute:NSLayoutAttributeTop
+                                                                    multiplier:1.0
+                                                                      constant:0.0];
+    NSLayoutConstraint *rightConstraint = [NSLayoutConstraint constraintWithItem:capturingToolbarView
+                                                                       attribute:NSLayoutAttributeRight
+                                                                       relatedBy:NSLayoutRelationEqual
+                                                                          toItem:view
+                                                                       attribute:NSLayoutAttributeRight
+                                                                      multiplier:1.0
+                                                                        constant:0.0];
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:capturingToolbarView
+                                                                        attribute:NSLayoutAttributeBottom
+                                                                        relatedBy:NSLayoutRelationEqual
+                                                                           toItem:view
+                                                                        attribute:NSLayoutAttributeBottom
+                                                                       multiplier:1.0
+                                                                         constant:0.0];
+    NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:capturingToolbarView
+                                                                       attribute:NSLayoutAttributeWidth
+                                                                       relatedBy:NSLayoutRelationEqual
+                                                                          toItem:nil
+                                                                       attribute:NSLayoutAttributeNotAnAttribute
+                                                                      multiplier:1.0
+                                                                        constant:89.0];
+    [view addConstraints:@[topConstraint, rightConstraint, bottomConstraint, widthConstraint]];
+}
+
+- (void)addEditingToolbarView
+{
+    UIView *view = self.view;
+    
+    // View
+    UIView *editingToolbarView = [[UIView alloc] initWithFrame:view.bounds];
+    editingToolbarView.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
+    
+    [view addSubview:editingToolbarView];
+    self.editingToolbarView = editingToolbarView;
+    
+    // Constraints
+    editingToolbarView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:editingToolbarView
+                                                                      attribute:NSLayoutAttributeLeft
+                                                                      relatedBy:NSLayoutRelationEqual
+                                                                         toItem:view
+                                                                      attribute:NSLayoutAttributeLeft
+                                                                     multiplier:1.0
+                                                                       constant:0.0];
+    NSLayoutConstraint *rightConstraint = [NSLayoutConstraint constraintWithItem:editingToolbarView
+                                                                       attribute:NSLayoutAttributeRight
+                                                                       relatedBy:NSLayoutRelationEqual
+                                                                          toItem:view
+                                                                       attribute:NSLayoutAttributeRight
+                                                                      multiplier:1.0
+                                                                        constant:0.0];
+    NSLayoutConstraint *bottomConstraint = [NSLayoutConstraint constraintWithItem:editingToolbarView
+                                                                        attribute:NSLayoutAttributeBottom
+                                                                        relatedBy:NSLayoutRelationEqual
+                                                                           toItem:view
+                                                                        attribute:NSLayoutAttributeBottom
+                                                                       multiplier:1.0
+                                                                         constant:0.0];
+    NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:editingToolbarView
+                                                                        attribute:NSLayoutAttributeHeight
+                                                                        relatedBy:NSLayoutRelationEqual
+                                                                           toItem:nil
+                                                                        attribute:NSLayoutAttributeNotAnAttribute
+                                                                       multiplier:1.0
+                                                                         constant:89.0];
+    [view addConstraints:@[leftConstraint, rightConstraint, bottomConstraint, heightConstraint]];
+}
+
+- (void)addCameraButton
+{
+    UIView *view = self.view;
+    UIView *capturingToolbarView = self.capturingToolbarView;
+    
+    // View
+    UIButton *cameraButton = [JPSCameraButton button];
+    [cameraButton addTarget:self action:@selector(takePicture:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:cameraButton];
+    self.cameraButton = cameraButton;
+    
+    // Constraints
+    cameraButton.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *vertical = [NSLayoutConstraint constraintWithItem:cameraButton
+                                                                attribute:NSLayoutAttributeCenterY
+                                                                relatedBy:NSLayoutRelationEqual
+                                                                   toItem:view
+                                                                attribute:NSLayoutAttributeCenterY
+                                                               multiplier:1.0f
+                                                                 constant:0];
+    NSLayoutConstraint *horizontal = [NSLayoutConstraint constraintWithItem:cameraButton
+                                                                  attribute:NSLayoutAttributeCenterX
+                                                                  relatedBy:NSLayoutRelationEqual
+                                                                     toItem:capturingToolbarView
+                                                                  attribute:NSLayoutAttributeCenterX
+                                                                 multiplier:1.0
+                                                                   constant:0.0];
+    NSLayoutConstraint *width = [NSLayoutConstraint constraintWithItem:cameraButton
+                                                             attribute:NSLayoutAttributeWidth
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:nil
+                                                             attribute:NSLayoutAttributeNotAnAttribute
+                                                            multiplier:1.0f
+                                                              constant:66.0f];
+    NSLayoutConstraint *height = [NSLayoutConstraint constraintWithItem:cameraButton
+                                                              attribute:NSLayoutAttributeHeight
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:nil
+                                                              attribute:NSLayoutAttributeNotAnAttribute
+                                                             multiplier:1.0f
+                                                               constant:66.0f];
+    [view addConstraints:@[vertical, horizontal, width, height]];
+}
+
+- (void)addCancelButton
+{
+    UIView *view = self.view;
+    UIView *capturingToolbarView = self.capturingToolbarView;
+    
+    // View
+    UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
+    cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    [cancelButton addTarget:self action:@selector(cancelButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:cancelButton];
+    self.cancelButton = cancelButton;
+    
+    // Constraints
+    NSLayoutConstraint *horizontal = [NSLayoutConstraint constraintWithItem:cancelButton
+                                                             attribute:NSLayoutAttributeCenterX
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:capturingToolbarView
+                                                             attribute:NSLayoutAttributeCenterX
+                                                            multiplier:1.0f
+                                                              constant:0.0f];
+    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:cancelButton
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:view
+                                                              attribute:NSLayoutAttributeBottom
+                                                             multiplier:1.0f
+                                                               constant:-19.5f];
+    [view addConstraints:@[horizontal, bottom]];
+}
+
+- (void)addFlashButton
+{
+    UIView *view = self.view;
+    
+    // View
+    UIButton *flashButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    flashButton.translatesAutoresizingMaskIntoConstraints = NO;
+    UIImage *flashButtonImage = [[UIImage imageNamed:@"JPSImagePickerController.bundle/flash_button"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+    [flashButton setImage:flashButtonImage forState:UIControlStateNormal];
+    [flashButton setTitle:@" On" forState:UIControlStateNormal];
+    [flashButton addTarget:self action:@selector(didPressFlashButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:flashButton];
+    self.flashButton = flashButton;
+    
+    // Constraints
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:flashButton
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:view
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0f
+                                                             constant:8.0f];
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:flashButton
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:view
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0f
+                                                            constant:9.5f];
+    [view addConstraints:@[left, top]];
+}
+
+- (void)addCameraSwitchButton
+{
+    UIView *view = self.view;
+    UIView *capturingToolbarView = self.capturingToolbarView;
+    
+    // View
+    UIButton *cameraSwitchButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    cameraSwitchButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [cameraSwitchButton setBackgroundImage:[UIImage imageNamed:@"JPSImagePickerController.bundle/camera_switch_button"] forState:UIControlStateNormal];
+    [cameraSwitchButton addTarget:self action:@selector(didPressCameraSwitchButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:cameraSwitchButton];
+    self.cameraSwitchButton = cameraSwitchButton;
+    
+    // Constraints
+    NSLayoutConstraint *horizontal = [NSLayoutConstraint constraintWithItem:cameraSwitchButton
+                                                                  attribute:NSLayoutAttributeCenterX
+                                                                  relatedBy:NSLayoutRelationEqual
+                                                                     toItem:capturingToolbarView
+                                                                  attribute:NSLayoutAttributeCenterX
+                                                                 multiplier:1.0
+                                                                   constant:0.0];
+    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:cameraSwitchButton
+                                                           attribute:NSLayoutAttributeTop
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:capturingToolbarView
+                                                           attribute:NSLayoutAttributeTop
+                                                          multiplier:1.0
+                                                            constant:JPSImagePickerControllerButtonInset];
+    [view addConstraints:@[horizontal, top]];
+}
+
+- (void)addPreviewImageView
+{
+    UIView *view = self.view;
+    
+    // View
+    UIImageView *previewImageView = [[UIImageView alloc] initWithFrame:view.bounds];
+    previewImageView.contentMode = UIViewContentModeScaleAspectFit;
+    
+    [view addSubview:previewImageView];
+    self.previewImageView = previewImageView;
+
+    // Constraints
+    previewImageView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSArray *constraints = [NSLayoutConstraint bnr_constraintsForView:previewImageView toMatchFrameOfView:view];
+    [view addConstraints:constraints];
+}
+
+- (void)addCapturePreviewView
+{
+    UIView *view = self.view;
+    
+    // View
+    JPSAVCaptureVideoPreviewLayerHostingView *capturePreviewView = [[JPSAVCaptureVideoPreviewLayerHostingView alloc] initWithFrame:view.bounds];
+    capturePreviewView.layer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    
+    self.capturePreviewView = capturePreviewView;
+    [view insertSubview:capturePreviewView atIndex:0];
+    
+    // Constraints
+    capturePreviewView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSArray *constraints = [NSLayoutConstraint bnr_constraintsForView:capturePreviewView toMatchFrameOfView:view];
+    [view addConstraints:constraints];
+}
+
+- (void)addRetakeButton
+{
+    UIView *view = self.view;
+    UIView *editingToolbarView = self.editingToolbarView;
+    
+    // View
+    UIButton *retakeButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UILabel *titleLabel = retakeButton.titleLabel;
+    titleLabel.font = [UIFont systemFontOfSize:18.0f];
+    titleLabel.textColor = [UIColor whiteColor];
+    [retakeButton setTitle:@"Retake" forState:UIControlStateNormal];
+    [retakeButton addTarget:self action:@selector(retake:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:retakeButton];
+    self.retakeButton = retakeButton;
+    
+    // Constraints
+    retakeButton.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:retakeButton
+                                                            attribute:NSLayoutAttributeLeft
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:editingToolbarView
+                                                            attribute:NSLayoutAttributeLeft
+                                                           multiplier:1.0
+                                                             constant:JPSImagePickerControllerButtonInset];
+    NSLayoutConstraint *vertical = [NSLayoutConstraint constraintWithItem:retakeButton
+                                                                attribute:NSLayoutAttributeCenterY
+                                                                relatedBy:NSLayoutRelationEqual
+                                                                   toItem:editingToolbarView
+                                                                attribute:NSLayoutAttributeCenterY
+                                                               multiplier:1.0
+                                                                 constant:0.0];
+    [view addConstraints:@[left, vertical]];
+}
+
+- (void)addUseButton
+{
+    UIView *view = self.view;
+    UIView *editingToolbarView = self.editingToolbarView;
+    
+    // View
+    UIButton *useButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UILabel *titleLabel = useButton.titleLabel;
+    titleLabel.font = [UIFont systemFontOfSize:18.0f];
+    titleLabel.textColor = [UIColor whiteColor];
+    [useButton setTitle:@"Use Photo" forState:UIControlStateNormal];
+    [useButton addTarget:self action:@selector(use:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [view addSubview:useButton];
+    self.useButton = useButton;
+    
+    // Constraints
+    useButton.translatesAutoresizingMaskIntoConstraints = NO;
+    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:useButton
+                                                             attribute:NSLayoutAttributeRight
+                                                             relatedBy:NSLayoutRelationEqual
+                                                                toItem:editingToolbarView
+                                                             attribute:NSLayoutAttributeRight
+                                                            multiplier:1.0f
+                                                              constant:-JPSImagePickerControllerButtonInset];
+    NSLayoutConstraint *vertical = [NSLayoutConstraint constraintWithItem:useButton
+                                                                attribute:NSLayoutAttributeCenterY
+                                                                relatedBy:NSLayoutRelationEqual
+                                                                   toItem:editingToolbarView
+                                                                attribute:NSLayoutAttributeCenterY
+                                                               multiplier:1.0
+                                                                 constant:0.0];
+    [view addConstraints:@[right, vertical]];
+}
+
+#pragma mark - Update UI
+
+- (void)updateSubviewsHiddenFromState
+{
+    [self updateCapturingToolbarViewHidden];
+    [self updateEditingToolbarViewHidden];
+    
+    [self updateFlashButtonHidden];
+    [self updateCameraSwitchButtonHidden];
+    [self updateCapturePreviewViewHidden];
+    [self updatePreviewImageViewHidden];
+    [self updateRetakeButtonHidden];
+    [self updateUseButtonHidden];
+    
+    [self updateCameraButtonHidden];
+    [self updateCancelButtonHidden];
+}
+
+- (void)updateCapturingToolbarViewHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL visible = capturing;
+    
+    self.capturingToolbarView.hidden = !visible;
+}
+
+- (void)updateEditingToolbarViewHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.editingToolbarView.hidden = !visible;
+}
+
+- (void)updateFlashButtonHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    BOOL deviceHasFlash = self.currentDevice.hasFlash;
+    
+    BOOL visible = deviceHasFlash && !capturing;
+    
+    self.flashButton.hidden = !visible;
+}
+
+- (void)updateCameraSwitchButtonHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL frontCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
+    BOOL rearCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
+    BOOL twoCamerasAvailable = frontCameraAvailable && rearCameraAvailable;
+    
+    BOOL visible = capturing && twoCamerasAvailable;
+    
+    self.cameraSwitchButton.hidden = !visible;
+}
+
+- (void)updateCapturePreviewViewHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL visible = capturing;
+    
+    self.capturePreviewView.hidden = !visible;
+}
+
+- (void)updatePreviewImageViewHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.previewImageView.hidden = !visible;
+}
+
+- (void)updateRetakeButtonHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.retakeButton.hidden = !visible;
+}
+
+- (void)updateUseButtonHidden
+{
+    BOOL captured = (self.state == JPSImagePickerControllerStateCaptured);
+    
+    BOOL visible = captured;
+    
+    self.useButton.hidden = !visible;
+}
+
+- (void)updateCameraButtonHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL visible = capturing;
+    
+    self.cameraButton.hidden = !visible;
+}
+
+- (void)updateCancelButtonHidden
+{
+    BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
+    
+    BOOL visible = capturing;
+    
+    self.cancelButton.hidden = !visible;
+}
+
+- (void)updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation
+{
+    [self updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:self.interfaceOrientation];
+}
+
+- (void)updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:(UIInterfaceOrientation)orientation
+{
+    self.capturePreviewView.layer.connection.videoOrientation = AVCaptureVideoOrientationFromUIDeviceOrientation(orientation);
+}
+
+#pragma mark - Helpers: Volume Button Handler
+
+- (void)setupVolumeButtonHandler
+{
+    if (self.volumeButtonTakesPicture) {
+        __weak typeof(self) weak_self = self;
+        self.volumeButtonHandler = [JPSVolumeButtonHandler volumeButtonHandlerWithUpBlock:^{
+            __strong typeof(self) strong_self = weak_self;
+            if (strong_self) {
+                [strong_self takePicture:nil];
+            }
+        }
+                                                                                downBlock:nil];
+    }
+}
+
+- (void)teardownVolumeButtonHandler
+{
+    self.volumeButtonHandler = nil;
+}
+
+#pragma mark - UIViewController Overrides
+
+- (BOOL)prefersStatusBarHidden
+{
+    return YES;
+}
+
+- (NSUInteger)supportedInterfaceOrientations
+{
+    return UIInterfaceOrientationMaskAll;
+}
+
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [super willAnimateRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    
+    [self updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:toInterfaceOrientation];
+}
+
+#pragma mark - Helpers: Capture Session
+
+- (void)setupSession
+{
+    self.state = JPSImagePickerControllerStateBeginningCapture;
+    [self updateSubviewsHiddenFromState];
+    
+    __weak typeof(self) weak_self = self;
+    NSOperation *setupOperation = [NSBlockOperation blockOperationWithBlock:^{
+        __strong typeof(self) strong_self = weak_self;
+        if (strong_self) {
+            AVCaptureSession *session = [[AVCaptureSession alloc] init];
+            session.sessionPreset = AVCaptureSessionPresetPhoto;
+            AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+            NSError *error = nil;
+            
+            AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
+            if (!input) return;
+            
+            [session addInput:input];
+            
+            // Turn on point autofocus for middle of view
+            NSError *lockError = nil;
+            BOOL lockSuccess = [device lockForConfiguration:&lockError];
+            if (lockSuccess) {
+                if ([device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+                    device.focusPointOfInterest = CGPointMake(0.5,0.5);
+                    device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
+                }
+                if ([device isFlashModeSupported:AVCaptureFlashModeOn]) {
+                    device.flashMode = AVCaptureFlashModeOn;
+                }
+            }
+            [device unlockForConfiguration];
+            
+            // Still Image Output
+            AVCaptureStillImageOutput *stillOutput = [[AVCaptureStillImageOutput alloc] init];
+            stillOutput.outputSettings = @{AVVideoCodecKey: AVVideoCodecJPEG};
+            [session addOutput:stillOutput];
+            
+            strong_self.captureStillImageOutput = stillOutput;
+            
+            [session startRunning];
+            
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                __strong typeof(self) strong_self = weak_self;
+                if (strong_self) {
+                    strong_self.session = session;
+                    
+                    if (session) {
+                        strong_self.state = JPSImagePickerControllerStateCapturing;
+                        [strong_self updateSubviewsHiddenFromState];
+                    } else {
+                        strong_self.state = JPSImagePickerControllerStateError;
+                        [strong_self updateSubviewsHiddenFromState];
+                    }
+                }
+            });
+        }
+    }];
+    
+    [self.captureQueue addOperation:setupOperation];
+}
+
+- (void)teardownSession
+{
+    [self.captureQueue cancelAllOperations];
+    
+    __weak typeof(self) weak_self = self;
+    NSOperation *teardownOperation = [NSBlockOperation blockOperationWithBlock:^{
+        __strong typeof(self) strong_self = weak_self;
+        if (strong_self) {
+            AVCaptureSession *session = strong_self.session;
+            [session stopRunning];
+            for (AVCaptureInput *input in session.inputs) {
+                [session removeInput:input];
+            }
+            for (AVCaptureOutput *output in session.outputs) {
+                [session removeOutput:output];
+            }
+            strong_self.session = nil;
+        }
+    }];
+    [self.captureQueue addOperation:teardownOperation];
 }
 
 #pragma mark - Actions
 
-- (void)takePicture {
+- (void)takePicture:(id)sender
+{
     if (!self.cameraButton.enabled) return;
     
-    AVCaptureStillImageOutput *output = self.session.outputs.lastObject;
+    AVCaptureStillImageOutput *output = self.captureStillImageOutput;
     AVCaptureConnection *videoConnection = output.connections.lastObject;
     if (!videoConnection) return;
     
     self.cameraButton.enabled = NO;
+
+    __weak typeof(self) weak_self = self;
     [output captureStillImageAsynchronouslyFromConnection:videoConnection
                                         completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
-                                            if (!imageDataSampleBuffer || error) return;
-                                            
-                                            NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-                                            self.imageOrientation = [JPSImagePickerController currentImageOrientation];
-                                            UIImage *image = [UIImage imageWithCGImage:[[[UIImage alloc] initWithData:imageData] CGImage]
-                                                                                 scale:1.0f
-                                                                           orientation:self.imageOrientation];
-                                            self.previewImage = image;
-                                            if (self.editingEnabled) {
-                                                [self showPreview];
-                                            } else {
-                                                [self dismiss];
+                                            __strong typeof(self) strong_self = weak_self;
+                                            if (strong_self) {
+                                                if (imageDataSampleBuffer) {
+                                                    NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+                                                    UIImageOrientation imageOrientation = [JPSImagePickerController currentImageOrientation];
+                                                    strong_self.imageOrientation = imageOrientation;
+                                                    UIImage *image = [UIImage imageWithCGImage:[[[UIImage alloc] initWithData:imageData] CGImage]
+                                                                                         scale:1.0f
+                                                                                   orientation:imageOrientation];
+                                                    strong_self.previewImage = image;
+                                                    strong_self.state = JPSImagePickerControllerStateCaptured;
+                                                    
+                                                    [strong_self delegateCalloutDidCaptureImage:image];
+                                                    if (strong_self.editingEnabled) {
+                                                        [strong_self updateSubviewsHiddenFromState];
+                                                    } else {
+                                                        [strong_self delegateCalloutDidConfirmImage:image];
+                                                    }
+                                                } else {
+                                                    strong_self.cameraButton.enabled = YES;
+                                                }
                                             }
-                                            [self delegateCalloutDidCaptureImage:image];
                                         }];
 }
 
-- (void)dismiss {
+- (IBAction)cancelButtonPressed:(id)sender
+{
     [self delegateCalloutDidCancel];
 }
 
-- (void)didPressFlashButton {
+- (IBAction)didPressFlashButton:(id)sender
+{
     // Expand to show flash modes
     AVCaptureDevice *device = [self currentDevice];
-    NSError *error = nil;
     // Turn on point autofocus for middle of view
-    [device lockForConfiguration:&error];
-    if (!error) {
+    NSError *lockError = nil;
+    BOOL lockSuccess = [device lockForConfiguration:&lockError];
+    if (lockSuccess) {
         if (device.flashMode == AVCaptureFlashModeOff) {
             device.flashMode = AVCaptureFlashModeOn;
             [self.flashButton setTitle:@" On" forState:UIControlStateNormal];
@@ -372,43 +853,38 @@
     [device unlockForConfiguration];
 }
 
-- (void)didPressCameraSwitchButton {
-    if (!self.session) return;
-    [self.session stopRunning];
-    
+- (IBAction)didPressCameraSwitchButton:(id)sender
+{
     // Input Switch
+    __weak typeof(self) weak_self = self;
     NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
-        AVCaptureDevice *frontCamera = [self frontCamera];
-        AVCaptureDevice *backCamera = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-        AVCaptureDeviceInput *input = self.session.inputs.firstObject;
-        
-        AVCaptureDevice *newCamera = nil;
-        
-        if (input.device.position == AVCaptureDevicePositionBack) {
-            newCamera = frontCamera;
-        } else {
-            newCamera = backCamera;
+        __strong typeof(self) strong_self = weak_self;
+        if (strong_self) {
+            AVCaptureSession *session = strong_self.session;
+            AVCaptureDeviceInput *input = session.inputs.firstObject;
+            
+            [session stopRunning];
+            [session removeInput:input];
+            
+            AVCaptureDevicePosition currentCaptureDevicePosition =
+            input.device.position;
+            AVCaptureDevicePosition newCaptureDevicePosition =
+            [strong_self captureDevicePositionAfterCaptureDevicePosition:currentCaptureDevicePosition];
+            AVCaptureDevice *device =
+            [strong_self captureDeviceForCaptureDevicePosition:newCaptureDevicePosition];
+            
+            NSError *error = nil;
+            input = [AVCaptureDeviceInput deviceInputWithDevice:device
+                                                          error:&error];
+            if (!input) return;
+            
+            [session addInput:input];
+            [session startRunning];
+            
+            dispatch_sync(dispatch_get_main_queue(), ^{
+            });
         }
-        
-        // Should the flash button still be displayed?
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.flashButton.hidden = !newCamera.isFlashAvailable;
-        });
-        
-        // Remove previous camera, and add new
-        [self.session removeInput:input];
-        NSError *error = nil;
-        
-        input = [AVCaptureDeviceInput deviceInputWithDevice:newCamera error:&error];
-        if (!input) return;
-        [self.session addInput:input];
     }];
-    operation.completionBlock = ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (!self.session) return;
-            [self.session startRunning];
-        });
-    };
     operation.queuePriority = NSOperationQueuePriorityVeryHigh;
     [self.captureQueue addOperation:operation];
     
@@ -420,221 +896,21 @@
                     completion:nil];
 }
 
-#pragma mark - Preview UI
-
-- (void)showPreview {
-    self.cameraButton.hidden = YES;
-    self.cancelButton.hidden = YES;
-    self.flashButton.hidden = YES;
-    self.cameraSwitchButton.hidden = YES;
-    self.capturePreviewLayer.hidden = YES;
-    
-    // Preview UI
-    [self addPreview];
-    [self addRetakeButton];
-    [self addUseButton];
-    
-    // Preview Top Area UI
-    [self addConfirmationLabel];
-    [self addConfirmationOverlayLabel];
-}
-
-- (void)addPreview {
-    if (self.previewImageView) {
-        self.previewImageView.image = self.previewImage;
-        self.previewImageView.hidden = NO;
-        return;
-    }
-    self.previewImageView = [[UIImageView alloc] initWithFrame:self.capturePreviewView.bounds];
-    self.previewImageView.contentMode = UIViewContentModeScaleAspectFit;
-    self.previewImageView.image = self.previewImage;
-    self.previewImageView.clipsToBounds = YES;
-    
-    UIScrollView *previewScrollView = [[UIScrollView alloc] initWithFrame:self.capturePreviewView.frame];
-    previewScrollView.maximumZoomScale = 4.0f;
-    previewScrollView.minimumZoomScale = 1.0f;
-    previewScrollView.delegate = self;
-    previewScrollView.showsHorizontalScrollIndicator = NO;
-    previewScrollView.showsVerticalScrollIndicator = NO;
-    previewScrollView.alwaysBounceHorizontal = YES;
-    previewScrollView.alwaysBounceVertical = YES;
-    [previewScrollView addSubview:self.previewImageView];
-    previewScrollView.contentSize = self.previewImageView.frame.size;
-    previewScrollView.userInteractionEnabled = self.zoomEnabled;
-    [self.view addSubview:previewScrollView];
-}
-
-- (void)addRetakeButton {
-    if (self.retakeButton) {
-        self.retakeButton.hidden = NO;
-        return;
-    }
-    self.retakeButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.retakeButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
-    self.retakeButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.retakeButton setTitle:@"Retake" forState:UIControlStateNormal];
-    [self.retakeButton addTarget:self action:@selector(retake) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.retakeButton];
-    
-    NSLayoutConstraint *left = [NSLayoutConstraint constraintWithItem:self.retakeButton
-                                                            attribute:NSLayoutAttributeLeft
-                                                            relatedBy:NSLayoutRelationEqual
-                                                               toItem:self.view
-                                                            attribute:NSLayoutAttributeLeft
-                                                           multiplier:1.0f
-                                                             constant:15.5f];
-    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:self.retakeButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0f
-                                                               constant:-19.5f];
-    [self.view addConstraints:@[left, bottom]];
-}
-
-- (void)addUseButton {
-    if (self.useButton) {
-        self.useButton.hidden = NO;
-        return;
-    }
-    self.useButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.useButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
-    self.useButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.useButton setTitle:@"Use Photo" forState:UIControlStateNormal];
-    [self.useButton addTarget:self action:@selector(use) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.useButton];
-    
-    NSLayoutConstraint *right = [NSLayoutConstraint constraintWithItem:self.useButton
-                                                             attribute:NSLayoutAttributeRight
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:self.view
-                                                             attribute:NSLayoutAttributeRight
-                                                            multiplier:1.0f
-                                                              constant:-15.5f];
-    NSLayoutConstraint *bottom = [NSLayoutConstraint constraintWithItem:self.useButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0f
-                                                               constant:-19.5f];
-    [self.view addConstraints:@[right, bottom]];
-}
-
-- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
-    return self.previewImageView;
-}
-
-#pragma mark - Preview Top Area UI
-
-- (void)addConfirmationLabel {
-    if (self.confirmationLabel) {
-        self.confirmationLabel.text = self.confirmationString;
-        self.confirmationLabel.hidden = NO;
-        return;
-    }
-    self.confirmationLabel = [[UILabel alloc] init];
-    self.confirmationLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    self.confirmationLabel.numberOfLines = 0;
-    self.confirmationLabel.textAlignment = NSTextAlignmentCenter;
-    self.confirmationLabel.font = [UIFont systemFontOfSize:16.0f];
-    self.confirmationLabel.textColor = [UIColor whiteColor];
-    self.confirmationLabel.text = self.confirmationString;
-    [self.view addSubview:self.confirmationLabel];
-    
-    NSLayoutConstraint *centerX = [NSLayoutConstraint constraintWithItem:self.confirmationLabel
-                                                               attribute:NSLayoutAttributeCenterX
-                                                               relatedBy:NSLayoutRelationEqual
-                                                                  toItem:self.view
-                                                               attribute:NSLayoutAttributeCenterX
-                                                              multiplier:1.0f
-                                                                constant:0];
-    NSLayoutConstraint *width = [NSLayoutConstraint constraintWithItem:self.confirmationLabel
-                                                             attribute:NSLayoutAttributeWidth
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:self.view
-                                                             attribute:NSLayoutAttributeWidth
-                                                            multiplier:0.9f
-                                                              constant:0];
-    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:self.confirmationLabel
-                                                           attribute:NSLayoutAttributeTop
-                                                           relatedBy:NSLayoutRelationEqual
-                                                              toItem:self.view
-                                                           attribute:NSLayoutAttributeTop
-                                                          multiplier:1.0f
-                                                            constant:9.5f];
-    [self.view addConstraints:@[centerX, width, top]];
-}
-
-- (void)addConfirmationOverlayLabel {
-    if (self.confirmationOverlayLabel) {
-        self.confirmationOverlayLabel.text = self.confirmationOverlayString;
-        self.confirmationOverlayLabel.hidden = NO;
-        return;
-    }
-    self.confirmationOverlayLabel = [[UILabel alloc] init];
-    self.confirmationOverlayLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    self.confirmationOverlayLabel.numberOfLines = 0;
-    self.confirmationOverlayLabel.textAlignment = NSTextAlignmentCenter;
-    self.confirmationOverlayLabel.font = [UIFont systemFontOfSize:16.0f];
-    self.confirmationOverlayLabel.textColor = [UIColor whiteColor];
-    self.confirmationOverlayLabel.backgroundColor = self.confirmationOverlayBackgroundColor;
-    self.confirmationOverlayLabel.text = self.confirmationOverlayString;
-    [self.view addSubview:self.confirmationOverlayLabel];
-    
-    NSLayoutConstraint *centerX = [NSLayoutConstraint constraintWithItem:self.confirmationOverlayLabel
-                                                               attribute:NSLayoutAttributeCenterX
-                                                               relatedBy:NSLayoutRelationEqual
-                                                                  toItem:self.view
-                                                               attribute:NSLayoutAttributeCenterX
-                                                              multiplier:1.0f
-                                                                constant:0];
-    NSLayoutConstraint *width = [NSLayoutConstraint constraintWithItem:self.confirmationOverlayLabel
-                                                             attribute:NSLayoutAttributeWidth
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:self.view
-                                                             attribute:NSLayoutAttributeWidth
-                                                            multiplier:1.0f
-                                                              constant:0];
-    NSLayoutConstraint *top = [NSLayoutConstraint constraintWithItem:self.confirmationOverlayLabel
-                                                           attribute:NSLayoutAttributeTop
-                                                           relatedBy:NSLayoutRelationEqual
-                                                              toItem:self.capturePreviewView
-                                                           attribute:NSLayoutAttributeTop
-                                                          multiplier:1.0f
-                                                            constant:0];
-    [self.view addConstraints:@[centerX, width, top]];
-}
-
 #pragma mark - Preview Actions
 
-- (void)retake {
-    self.previewImageView.hidden = YES;
-    self.retakeButton.hidden = YES;
-    self.useButton.hidden = YES;
-    
-    self.confirmationLabel.hidden = YES;
-    self.confirmationOverlayLabel.hidden = YES;
-    
-    self.cameraButton.hidden = NO;
-    self.cancelButton.hidden = NO;
-    self.flashButton.hidden = NO;
-    self.cameraSwitchButton.hidden = NO;
-    self.capturePreviewLayer.hidden = NO;
-    
+- (IBAction)retake:(id)sender
+{
+    self.state = JPSImagePickerControllerStateCapturing;
+    [self updateSubviewsHiddenFromState];
     self.cameraButton.enabled = YES;
 }
 
-- (void)use {
+- (void)use:(id)sender
+{
     [self delegateCalloutDidConfirmImage:self.previewImage];
 }
 
 #pragma mark - Orientation
-
-- (NSUInteger)supportedInterfaceOrientations {
-    return UIInterfaceOrientationMaskAll;
-}
 
 + (UIImageOrientation)currentImageOrientation {
     // This is weird, but it works
@@ -686,3 +962,32 @@
 }
 
 @end
+
+static AVCaptureVideoOrientation AVCaptureVideoOrientationFromUIDeviceOrientation(UIInterfaceOrientation deviceOrientation)
+{
+    static NSDictionary *dictionary = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSMutableDictionary *mutableDictionary = [[NSMutableDictionary alloc] init];
+        
+#undef SetVideoOrientationForDeviceOrientation
+#define SetVideoOrientationForDeviceOrientation( videoOrientation , deviceOrientation ) \
+    do { \
+        mutableDictionary[@(deviceOrientation)] = @(videoOrientation); \
+    } while(0)
+        
+        SetVideoOrientationForDeviceOrientation( AVCaptureVideoOrientationPortrait , UIInterfaceOrientationPortrait );
+        SetVideoOrientationForDeviceOrientation( AVCaptureVideoOrientationPortraitUpsideDown , UIInterfaceOrientationPortraitUpsideDown );
+        SetVideoOrientationForDeviceOrientation( AVCaptureVideoOrientationLandscapeRight , UIInterfaceOrientationLandscapeRight );
+        SetVideoOrientationForDeviceOrientation( AVCaptureVideoOrientationLandscapeLeft , UIInterfaceOrientationLandscapeLeft );
+        
+#undef SetVideoOrientationForDeviceOrientation
+        
+        dictionary = [mutableDictionary copy];
+    });
+    
+    NSNumber *resultNumber = dictionary[@(deviceOrientation)];
+    AVCaptureVideoOrientation result = resultNumber.integerValue;
+    return result;
+}
