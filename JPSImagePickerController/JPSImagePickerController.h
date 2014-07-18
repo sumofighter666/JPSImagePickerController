@@ -15,9 +15,13 @@
 #pragma mark - Feature Flags
 
 // Confirmation screen enabled, default YES
-@property (nonatomic, assign) BOOL editingEnabled;
+@property (nonatomic) BOOL editingEnabled;
+
 // Volume up button as trigger enabled, default YES
-@property (nonatomic, assign) BOOL volumeButtonTakesPicture;
+@property (nonatomic) BOOL volumeButtonTakesPicture;
+
+// Front camera enabled, default YES
+@property (nonatomic) BOOL frontCameraEnabled;
 
 #pragma mark - Delegate
 

@@ -690,13 +690,14 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)updateCameraSwitchButtonHidden
 {
+    BOOL frontCameraEnabled = self.frontCameraEnabled;
     BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
     
     BOOL frontCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
     BOOL rearCameraAvailable = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
     BOOL twoCamerasAvailable = frontCameraAvailable && rearCameraAvailable;
     
-    BOOL visible = capturing && twoCamerasAvailable;
+    BOOL visible = frontCameraEnabled && capturing && twoCamerasAvailable;
     
     self.cameraSwitchButton.hidden = !visible;
 }
