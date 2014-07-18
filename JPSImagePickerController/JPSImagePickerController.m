@@ -134,6 +134,20 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     self.previewImageView.image = previewImage;
 }
 
+- (void)setState:(JPSImagePickerControllerState)state
+{
+    [self setState:state andUpdateSubviewsHidden:YES];
+}
+
+- (void)setState:(JPSImagePickerControllerState)state andUpdateSubviewsHidden:(BOOL)update
+{
+    _state = state;
+    
+    if (update) {
+        [self updateSubviewsHiddenFromState];
+    }
+}
+
 #pragma mark - Accessors: Capture Devices
 
 - (AVCaptureDevice *)frontCamera
@@ -1060,7 +1074,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (void)setupSession
 {
     self.state = JPSImagePickerControllerStateBeginningCapture;
-    [self updateSubviewsHiddenFromState];
     
     __weak typeof(self) weak_self = self;
     NSOperation *setupOperation = [NSBlockOperation blockOperationWithBlock:^{
@@ -1106,10 +1119,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                     
                     if (session) {
                         strong_self.state = JPSImagePickerControllerStateCapturing;
-                        [strong_self updateSubviewsHiddenFromState];
                     } else {
                         strong_self.state = JPSImagePickerControllerStateError;
-                        [strong_self updateSubviewsHiddenFromState];
                     }
                 }
             });
@@ -1178,7 +1189,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                              scale:1.0f
                                        orientation:imageOrientation];
         self.previewImage = image;
-        self.state = JPSImagePickerControllerStateCaptured;
+        [self setState:JPSImagePickerControllerStateCaptured andUpdateSubviewsHidden:NO];
         
         [self delegateCalloutDidCaptureImage:image];
         if (self.editingEnabled) {
@@ -1274,7 +1285,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (IBAction)retake:(id)sender
 {
     self.state = JPSImagePickerControllerStateCapturing;
-    [self updateSubviewsHiddenFromState];
     self.cameraButton.enabled = YES;
 }
 
