@@ -577,7 +577,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     cameraSwitchButton.translatesAutoresizingMaskIntoConstraints = NO;
     [cameraSwitchButton setBackgroundImage:[UIImage imageNamed:@"JPSImagePickerController.bundle/camera_switch_button"] forState:UIControlStateNormal];
     
-    [view addSubview:cameraSwitchButton];
+    [capturingToolbarView addSubview:cameraSwitchButton];
     self.cameraSwitchButton = cameraSwitchButton;
     
     // Constraints
@@ -595,7 +595,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                            attribute:NSLayoutAttributeTop
                                                           multiplier:1.0
                                                             constant:JPSImagePickerControllerButtonInset];
-    [view addConstraints:@[horizontal, top]];
+    [capturingToolbarView addConstraints:@[horizontal, top]];
 }
 
 - (void)addCameraSwitchOverlayControl
