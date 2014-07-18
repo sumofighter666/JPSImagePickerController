@@ -211,7 +211,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                     result = UIImageOrientationRight;
                 } break;
                 default: {
-                    //TODO: Is this right for face-up, face-down?
+                    //TODO: Determine: Is this right for face-up, face-down?
                     result = UIImageOrientationRight;
                 } break;
             }
@@ -231,13 +231,13 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                     result = UIImageOrientationRight;
                 } break;
                 default: {
-                    //TODO: Is this right for face-up, face-down?
+                    //TODO: Determine: Is this right for face-up, face-down?
                     result = UIImageOrientationRight;
                 } break;
             }
         } break;
         case AVCaptureDevicePositionUnspecified: {
-            //TODO: Does this make sense?
+            //TODO: Determine: Does this make sense?
             result = UIImageOrientationRight;
         } break;
     }
