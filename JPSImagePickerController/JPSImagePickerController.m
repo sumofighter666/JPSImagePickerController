@@ -375,7 +375,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     UIButton *cameraButton = [JPSCameraButton button];
     [cameraButton addTarget:self action:@selector(didPressCameraButton:) forControlEvents:UIControlEventTouchUpInside];
     
-    [view addSubview:cameraButton];
+    [capturingToolbarView addSubview:cameraButton];
     self.cameraButton = cameraButton;
     
     // Constraints
@@ -383,7 +383,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     NSLayoutConstraint *vertical = [NSLayoutConstraint constraintWithItem:cameraButton
                                                                 attribute:NSLayoutAttributeCenterY
                                                                 relatedBy:NSLayoutRelationEqual
-                                                                   toItem:view
+                                                                   toItem:capturingToolbarView
                                                                 attribute:NSLayoutAttributeCenterY
                                                                multiplier:1.0f
                                                                  constant:0];
@@ -408,7 +408,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                                                               attribute:NSLayoutAttributeNotAnAttribute
                                                              multiplier:1.0f
                                                                constant:66.0f];
-    [view addConstraints:@[vertical, horizontal, width, height]];
+    [capturingToolbarView addConstraints:@[vertical, horizontal, width, height]];
 }
 
 - (void)addCancelButton
