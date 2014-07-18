@@ -368,7 +368,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addCameraButton
 {
-    UIView *view = self.view;
     UIView *capturingToolbarView = self.capturingToolbarView;
     
     // View
@@ -413,7 +412,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addCancelButton
 {
-    UIView *view = self.view;
     UIView *capturingToolbarView = self.capturingToolbarView;
     
     // View
@@ -445,7 +443,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addCancelOverlayControl
 {
-    UIView *view = self.view;
     UIView *capturingToolbarView = self.capturingToolbarView;
     UIButton *cancelButton = self.cancelButton;
     
@@ -525,6 +522,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (void)addFlashOverlayControl
 {
     UIView *view = self.view;
+    
     UIButton *flashButton = self.flashButton;
     
     // View
@@ -569,7 +567,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addCameraSwitchButton
 {
-    UIView *view = self.view;
     UIView *capturingToolbarView = self.capturingToolbarView;
     
     // View
@@ -600,7 +597,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addCameraSwitchOverlayControl
 {
-    UIView *view = self.view;
     UIView *capturingToolbarView = self.capturingToolbarView;
     UIButton *cameraSwitchButton = self.cameraSwitchButton;
     
@@ -681,7 +677,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addRetakeButton
 {
-    UIView *view = self.view;
+
     UIView *editingToolbarView = self.editingToolbarView;
     
     // View
@@ -715,7 +711,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addRetakeOverlayControl
 {
-    UIView *view = self.view;
     UIView *editingToolbarView = self.editingToolbarView;
     UIButton *retakeButton = self.retakeButton;
     
@@ -762,7 +757,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addUseButton
 {
-    UIView *view = self.view;
     UIView *editingToolbarView = self.editingToolbarView;
     
     // View
@@ -796,7 +790,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)addUseOverlayControl
 {
-    UIView *view = self.view;
     UIView *editingToolbarView = self.editingToolbarView;
     UIButton *useButton = self.useButton;
     
