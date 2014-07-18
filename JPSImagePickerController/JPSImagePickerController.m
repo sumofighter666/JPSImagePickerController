@@ -1007,6 +1007,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
             [session startRunning];
             
             dispatch_sync(dispatch_get_main_queue(), ^{
+                __strong typeof(self) strong_self = weak_self;
+                strong_self.capturePreviewView.alpha = 1.0;
             });
         }
     }];
@@ -1015,9 +1017,12 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     // Flip Animation
     [UIView transitionWithView:self.capturePreviewView
-                      duration:1.0f
+                      duration:0.5
                        options:UIViewAnimationOptionTransitionFlipFromLeft | UIViewAnimationOptionAllowAnimatedContent
-                    animations:nil
+                    animations:^{
+                        __strong typeof(self) strong_self = weak_self;
+                        strong_self.capturePreviewView.alpha = 0.2;
+                    }
                     completion:nil];
 }
 
