@@ -77,6 +77,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         _frontCameraEnabled = YES;
         _editingEnabled = YES;
         _volumeButtonTakesPicture = YES;
+        _enableAutoRetake = NO;
     }
     return self;
 }
@@ -1265,6 +1266,10 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 {
     if ([self.delegate respondsToSelector:@selector(picker:didCaptureImage:)]) {
         [self.delegate picker:self didCaptureImage:image];
+    }
+
+    if (self.isAutoRetakeEnabled) {
+        [self retake:nil];
     }
 }
 

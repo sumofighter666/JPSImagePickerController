@@ -23,6 +23,9 @@
 // Front camera enabled, default YES
 @property (nonatomic) BOOL frontCameraEnabled;
 
+// Enable auto retake
+@property (nonatomic, getter = isAutoRetakeEnabled) BOOL enableAutoRetake;
+
 #pragma mark - Delegate
 
 @property (nonatomic, weak) id<JPSImagePickerDelegate> delegate;
