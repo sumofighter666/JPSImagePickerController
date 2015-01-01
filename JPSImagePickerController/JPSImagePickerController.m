@@ -32,7 +32,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 @property (nonatomic) UIView *capturingToolbarView;
 @property (nonatomic) UIView *editingToolbarView;
-@property (nonatomic) UIButton *cameraButton;
 @property (nonatomic) UIButton *cancelButton;
 @property (nonatomic) UIControl *cancelOverlayControl;
 @property (nonatomic) UIButton *flashButton;
@@ -279,7 +278,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [self addCameraSwitchButton];
     [self addCameraSwitchOverlayControl];
     [self addCameraButton];
-    [self addCancelButton];
+    [self addDoneButton];
     [self addCancelOverlayControl];
     
     [self addEditingToolbarView];
@@ -426,14 +425,14 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [capturingToolbarView addConstraints:@[vertical, horizontal, width, height]];
 }
 
-- (void)addCancelButton
+- (void)addDoneButton
 {
     UIView *capturingToolbarView = self.capturingToolbarView;
     
     // View
     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
     cancelButton.titleLabel.font = [UIFont systemFontOfSize:18.0f];
-    [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    [cancelButton setTitle:HnHDialog_buttonDone forState:UIControlStateNormal];
     
     [capturingToolbarView addSubview:cancelButton];
     self.cancelButton = cancelButton;
@@ -1130,6 +1129,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     if (!videoConnection) return;
     
     self.cameraButton.enabled = NO;
+    self.cameraButton.alpha = 0.5f;
 
     __weak typeof(self) weak_self = self;
     [output captureStillImageAsynchronouslyFromConnection:videoConnection
@@ -1166,6 +1166,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         }
     } else {
         self.cameraButton.enabled = YES;
+        self.cameraButton.alpha = 1.f;
     }
 }
 
@@ -1252,7 +1253,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 - (IBAction)retake:(id)sender
 {
     self.state = JPSImagePickerControllerStateCapturing;
-    self.cameraButton.enabled = YES;
 }
 
 - (IBAction)didPressUseButton:(id)sender
