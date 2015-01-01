@@ -42,6 +42,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 @property (nonatomic) UIControl *retakeOverlayControl;
 @property (nonatomic) UIButton *useButton;
 @property (nonatomic) UIControl *useOverlayControl;
+// TODO: implement left hand option
+@property (nonatomic, getter=isLeftHand) BOOL leftHand;
 @end
 
 @interface JPSImagePickerController (/*Lifetime State*/)
@@ -77,6 +79,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         _editingEnabled = YES;
         _volumeButtonTakesPicture = YES;
         _enableAutoRetake = NO;
+        _leftHand = YES;
     }
     return self;
 }
