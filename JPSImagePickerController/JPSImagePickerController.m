@@ -897,7 +897,9 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     BOOL capturing = (self.state == JPSImagePickerControllerStateCapturing);
     BOOL deviceHasFlash = self.currentDevice.hasFlash;
     
-    BOOL visible = deviceHasFlash && !capturing;
+    //BOOL visible = deviceHasFlash && !capturing; // FIXME: removing capturing - observe
+    
+    BOOL visible = deviceHasFlash;
     
     self.flashButton.hidden = !visible;
     self.flashOverlayControl.hidden = !visible;
