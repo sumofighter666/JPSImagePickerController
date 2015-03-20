@@ -32,7 +32,6 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 @property (nonatomic) UIView *capturingToolbarView;
 @property (nonatomic) UIView *editingToolbarView;
-@property (nonatomic) UIButton *cancelButton;
 @property (nonatomic) UIControl *cancelOverlayControl;
 @property (nonatomic) UIButton *flashButton;
 @property (nonatomic) UIControl *flashOverlayControl;
@@ -1125,7 +1124,10 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (IBAction)didPressCameraButton:(id)sender
 {
-    if (!self.cameraButton.enabled) return;
+    if (!self.cameraButton.enabled ||
+        !self.cancelButton.enabled) {
+        return;
+    }
     
     AVCaptureStillImageOutput *output = self.captureStillImageOutput;
     AVCaptureConnection *videoConnection = output.connections.lastObject;
@@ -1133,6 +1135,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     
     self.cameraButton.enabled = NO;
     self.cameraButton.alpha = 0.5f;
+    self.cancelButton.enabled = NO;
+    self.cancelButton.alpha = 0.5f;
 
     __weak typeof(self) weak_self = self;
     [output captureStillImageAsynchronouslyFromConnection:videoConnection
@@ -1170,6 +1174,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     } else {
         self.cameraButton.enabled = YES;
         self.cameraButton.alpha = 1.f;
+        self.cancelButton.enabled = YES;
+        self.cancelButton.alpha = 1.f;
     }
 }
 
