@@ -26,6 +26,9 @@
 // Enable auto retake
 @property (nonatomic, getter = isAutoRetakeEnabled) BOOL enableAutoRetake;
 
+// Camera button
+@property (nonatomic) UIButton *cameraButton;
+
 #pragma mark - Delegate
 
 @property (nonatomic, weak) id<JPSImagePickerDelegate> delegate;
