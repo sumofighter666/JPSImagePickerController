@@ -29,6 +29,9 @@
 // Camera button
 @property (nonatomic) UIButton *cameraButton;
 
+// Cancel button
+@property (nonatomic) UIButton *cancelButton;
+
 #pragma mark - Delegate
 
 @property (nonatomic, weak) id<JPSImagePickerDelegate> delegate;
