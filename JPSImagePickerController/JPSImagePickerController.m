@@ -1134,6 +1134,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     AVCaptureStillImageOutput *output = self.captureStillImageOutput;
     AVCaptureConnection *videoConnection = output.connections.lastObject;
     if (!videoConnection) return;
+    
+    self.cameraButton.enabled = NO;
+    self.cameraButton.alpha = 0.5f;
+    self.cancelButton.enabled = NO;
+    self.cancelButton.alpha = 0.5f;
 
     __weak typeof(self) weak_self = self;
     [output captureStillImageAsynchronouslyFromConnection:videoConnection
