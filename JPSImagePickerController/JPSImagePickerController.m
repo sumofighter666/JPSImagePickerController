@@ -989,7 +989,8 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
 
 - (void)updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation
 {
-    [self updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:self.interfaceOrientation];
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    [self updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:orientation];
 }
 
 - (void)updateCapturePreviewViewLayerConnectionVideoOrientationFromInterfaceOrientation:(UIInterfaceOrientation)orientation
