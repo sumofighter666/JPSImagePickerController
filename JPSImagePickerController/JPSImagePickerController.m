@@ -18,6 +18,9 @@ static AVCaptureVideoOrientation AVCaptureVideoOrientationFromUIDeviceOrientatio
 
 static CGFloat JPSImagePickerControllerButtonInset = 15.5;
 
+static NSString * const JPSUserDefaultsFlashEnabled = @"flashEnabled";
+
+
 typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     JPSImagePickerControllerStateError = -1,
     JPSImagePickerControllerStateUnknown = 0,
@@ -504,6 +507,15 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     [capturingToolbarView addConstraints:@[right, bottom, left, top]];
 }
 
+- (BOOL) isFlashEnabled {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:JPSUserDefaultsFlashEnabled];
+}
+
+- (void)setFlashEnabled:(BOOL)on {
+    [[NSUserDefaults standardUserDefaults] setBool:on forKey:JPSUserDefaultsFlashEnabled];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
 - (void)addFlashButton
 {
     UIView *view = self.view;
@@ -512,8 +524,13 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     UIButton *flashButton = [UIButton buttonWithType:UIButtonTypeSystem];
     flashButton.translatesAutoresizingMaskIntoConstraints = NO;
     UIImage *flashButtonImage = [[UIImage imageNamed:@"JPSImagePickerController.bundle/flash_button"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-    [flashButton setImage:flashButtonImage forState:UIControlStateNormal];
-    [flashButton setTitle:@" On" forState:UIControlStateNormal];
+    if ([self isFlashEnabled]) {
+        [flashButton setImage:flashButtonImage forState:UIControlStateNormal];
+        [flashButton setTitle:@" On" forState:UIControlStateNormal];
+    } else {
+        [flashButton setImage:flashButtonImage forState:UIControlStateNormal];
+        [flashButton setTitle:@" Off" forState:UIControlStateNormal];
+    }
     
     [view addSubview:flashButton];
     self.flashButton = flashButton;
@@ -1067,7 +1084,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
                     device.focusMode = AVCaptureFocusModeContinuousAutoFocus;
                 }
                 if ([device isFlashModeSupported:AVCaptureFlashModeOn]) {
-                    device.flashMode = AVCaptureFlashModeOn;
+                    if ([self isFlashEnabled]) {
+                        device.flashMode = AVCaptureFlashModeOn;
+                    } else {
+                        device.flashMode = AVCaptureFlashModeOff;
+                    }
                 }
             }
             [device unlockForConfiguration];
@@ -1198,9 +1219,11 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
         if (device.flashMode == AVCaptureFlashModeOff) {
             device.flashMode = AVCaptureFlashModeOn;
             [self.flashButton setTitle:@" On" forState:UIControlStateNormal];
+            [self setFlashEnabled:YES];
         } else {
             device.flashMode = AVCaptureFlashModeOff;
             [self.flashButton setTitle:@" Off" forState:UIControlStateNormal];
+            [self setFlashEnabled:NO];
         }
     }
     [device unlockForConfiguration];
