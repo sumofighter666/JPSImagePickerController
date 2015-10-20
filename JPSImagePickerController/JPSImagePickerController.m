@@ -1043,7 +1043,7 @@ typedef NS_ENUM(NSInteger, JPSImagePickerControllerState) {
     return YES;
 }
 
-- (NSUInteger)supportedInterfaceOrientations
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
     return UIInterfaceOrientationMaskAll;
 }
